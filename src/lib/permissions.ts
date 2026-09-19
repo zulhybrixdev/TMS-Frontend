@@ -1,0 +1,27 @@
+// Mirrors backend/src/common/permissions.ts - kept as a small standalone
+// copy on the frontend so the client bundle doesn't depend on backend code.
+export const PERMISSIONS = {
+  DASHBOARD_VIEW: "dashboard.view",
+  USERS_MANAGE: "users.manage",
+  ROLES_MANAGE: "roles.manage",
+  BANKS_MANAGE: "banks.manage",
+  ACCOUNTS_VIEW: "accounts.view",
+  ACCOUNTS_MANAGE: "accounts.manage",
+  CASH_POSITION_VIEW: "cash_position.view",
+  PAYMENTS_VIEW: "payments.view",
+  PAYMENTS_CREATE: "payments.create",
+  BENEFICIARIES_VIEW: "beneficiaries.view",
+  BENEFICIARIES_MANAGE: "beneficiaries.manage",
+  INCOMING_VIEW: "incoming.view",
+  INCOMING_MANAGE: "incoming.manage",
+  TRANSFERS_VIEW: "transfers.view",
+  TRANSFERS_CREATE: "transfers.create",
+  APPROVALS_ACT: "approvals.act",
+  APPROVAL_RULES_MANAGE: "approval_rules.manage",
+  FORECASTS_VIEW: "forecasts.view",
+  FORECASTS_MANAGE: "forecasts.manage",
+  REPORTS_VIEW: "reports.view",
+  REPORTS_EXPORT: "reports.export",
+  AUDIT_VIEW: "audit.view",
+  SETTINGS_MANAGE: "settings.manage",
+} as const;

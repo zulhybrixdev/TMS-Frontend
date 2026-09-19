@@ -1,0 +1,185 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --surface: #fcfcfb;
+  --surface-raised: #ffffff;
+  --plane: #f9f9f7;
+  --border: rgba(11, 11, 11, 0.1);
+  --ink: #0b0b0b;
+  --ink-secondary: #52514e;
+  --ink-muted: #898781;
+
+  /* Signature accent: deep violet rather than default SaaS blue -
+     reserved for interactive chrome (CTAs, links, focus, active nav).
+     Charts keep blue as the sequential/primary series per the viz system. */
+  --brand: #4a3aa7;
+  --brand-hover: #3c2f8a;
+  --brand-soft: #efecfc;
+  --brand-glow: rgba(74, 58, 167, 0.16);
+
+  --status-good: #0ca30c;
+  --status-good-soft: #e6f6e6;
+  --status-warning: #b8790f;
+  --status-warning-soft: #fdf1dc;
+  --status-serious: #c1552f;
+  --status-serious-soft: #fbe9e1;
+  --status-critical: #d03b3b;
+  --status-critical-soft: #fbe6e6;
+
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #4a3aa7;
+
+  --gridline: #e1e0d9;
+  --baseline: #c3c2b7;
+
+  /* Chrome: the sidebar/command-deck stays a constant deep ink panel in
+     both light and dark app themes - a deliberate signature rather than
+     a plain white admin-template sidebar that flips with theme. */
+  --chrome-bg: #0b0b0e;
+  --chrome-bg-raised: #16161b;
+  --chrome-border: rgba(255, 255, 255, 0.08);
+  --chrome-ink: #f4f3f7;
+  --chrome-ink-muted: #85838f;
+  --chrome-active: #1c1a2e;
+  --chrome-accent: #9585f0;
+}
+
+:root:not([data-theme="light"]) {
+  @media (prefers-color-scheme: dark) {
+    color-scheme: dark;
+    --surface: #1a1a19;
+    --surface-raised: #212120;
+    --plane: #0d0d0d;
+    --border: rgba(255, 255, 255, 0.1);
+    --ink: #ffffff;
+    --ink-secondary: #c3c2b7;
+    --ink-muted: #898781;
+
+    --brand: #9085e9;
+    --brand-hover: #a89ef0;
+    --brand-soft: #211d3d;
+    --brand-glow: rgba(144, 133, 233, 0.18);
+
+    --status-good: #0ca30c;
+    --status-good-soft: #103410;
+    --status-warning: #fab219;
+    --status-warning-soft: #3a2c0b;
+    --status-serious: #ec835a;
+    --status-serious-soft: #3a2318;
+    --status-critical: #e66767;
+    --status-critical-soft: #3a1818;
+
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #9085e9;
+
+    --gridline: #2c2c2a;
+    --baseline: #383835;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface: #1a1a19;
+  --surface-raised: #212120;
+  --plane: #0d0d0d;
+  --border: rgba(255, 255, 255, 0.1);
+  --ink: #ffffff;
+  --ink-secondary: #c3c2b7;
+  --ink-muted: #898781;
+
+  --brand: #9085e9;
+  --brand-hover: #a89ef0;
+  --brand-soft: #211d3d;
+  --brand-glow: rgba(144, 133, 233, 0.18);
+
+  --status-good: #0ca30c;
+  --status-good-soft: #103410;
+  --status-warning: #fab219;
+  --status-warning-soft: #3a2c0b;
+  --status-serious: #ec835a;
+  --status-serious-soft: #3a2318;
+  --status-critical: #e66767;
+  --status-critical-soft: #3a1818;
+
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #9085e9;
+
+  --gridline: #2c2c2a;
+  --baseline: #383835;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--plane);
+  color: var(--ink);
+  font-feature-settings: "cv11", "ss01";
+  font-family: "Inter Variable", "Inter", system-ui, -apple-system, sans-serif;
+}
+
+h1, h2, h3, .font-display {
+  font-family: "Space Grotesk", "Inter Variable", system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+::selection {
+  background: var(--brand-glow);
+}
+
+.tabular-nums,
+.font-mono {
+  font-variant-numeric: tabular-nums;
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Thin, unobtrusive scrollbars matching the enterprise surface language */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--baseline) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--baseline);
+  border-radius: 8px;
+}
+
+/* Faint dot-grid texture used on the chrome panel and login hero -
+   a quiet "ledger paper" motif, never on content surfaces. */
+.ledger-grid {
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.08) 1px, transparent 0);
+  background-size: 22px 22px;
+}
+
+/* Live/pending pulse used sparingly on a handful of "this is moving" states
+   (pending approvals, unread notification dot) - not decorative confetti. */
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 45%, transparent); }
+  70% { box-shadow: 0 0 0 6px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.pulse-dot {
+  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

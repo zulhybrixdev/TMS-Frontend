@@ -1,0 +1,16 @@
+node_modules/
+
+# Build output - both the full app (dist/) and the POC build (dist-poc/,
+# see package.json's build:poc). Neither belongs in source control.
+dist/
+dist-poc/
+
+# Env files - only the checked-in template stays.
+# .env
+# .env.*
+# !.env.example
+
+*.log
+*.tsbuildinfo
+.DS_Store
+e2e/artifacts/
