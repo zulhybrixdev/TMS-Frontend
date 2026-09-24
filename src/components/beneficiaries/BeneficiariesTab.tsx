@@ -16,12 +16,13 @@ import { Input, Label, ErrorText } from "../ui/Input";
 import { Skeleton } from "../ui/Skeleton";
 import { useAuth } from "../../lib/auth-context";
 import { PERMISSIONS } from "../../lib/permissions";
+import { t, tk } from "../../i18n";
 
 const schema = z.object({
-  nickname: z.string().min(2, "Required"),
-  accountName: z.string().min(2, "Required"),
-  accountNumber: z.string().min(4, "Required"),
-  bankName: z.string().min(2, "Required"),
+  nickname: z.string().min(2, tk("Required")),
+  accountName: z.string().min(2, tk("Required")),
+  accountNumber: z.string().min(4, tk("Required")),
+  bankName: z.string().min(2, tk("Required")),
   currencyCode: z.string().length(3).optional().or(z.literal("")),
 });
 type FormValues = z.infer<typeof schema>;
@@ -42,7 +43,7 @@ export function BeneficiariesTab() {
   const columns: Column<Beneficiary>[] = [
     {
       key: "nickname",
-      header: "Beneficiary",
+      header: t("Beneficiary"),
       render: (b) => (
         <div>
           <p className="font-medium text-ink">{b.nickname}</p>
@@ -50,9 +51,9 @@ export function BeneficiariesTab() {
         </div>
       ),
     },
-    { key: "bankName", header: "Bank", render: (b) => b.bankName },
-    { key: "accountNumber", header: "Account Number", render: (b) => <span className="tabular-nums">{b.accountNumber}</span> },
-    { key: "currencyCode", header: "Currency", render: (b) => b.currencyCode ?? "—" },
+    { key: "bankName", header: t("Bank"), render: (b) => b.bankName },
+    { key: "accountNumber", header: t("Account Number"), render: (b) => <span className="tabular-nums">{b.accountNumber}</span> },
+    { key: "currencyCode", header: t("Currency"), render: (b) => b.currencyCode ?? "—" },
   ];
 
   if (isLoading) return <Skeleton className="h-64 w-full" />;
@@ -62,11 +63,11 @@ export function BeneficiariesTab() {
       <Toolbar
         search={search}
         onSearch={setSearch}
-        placeholder="Search beneficiaries..."
+        placeholder={t("Search beneficiaries...")}
         actions={
           canManage && (
             <Button onClick={() => setEditing("new")}>
-              <Plus className="h-4 w-4" /> Add Beneficiary
+              <Plus className="h-4 w-4" /> {t("Add Beneficiary")}
             </Button>
           )
         }
@@ -74,8 +75,8 @@ export function BeneficiariesTab() {
       {!data || data.length === 0 ? (
         <EmptyState
           icon={<BookUser className="h-5 w-5" />}
-          title="No beneficiaries saved"
-          description="Save a payee here to prefill their details next time you create a payment, instead of retyping them."
+          title={t("No beneficiaries saved")}
+          description={t("Save a payee here to prefill their details next time you create a payment, instead of retyping them.")}
         />
       ) : (
         <DataTable columns={columns} rows={data} rowKey={(b) => b.id} onRowClick={canManage ? setEditing : undefined} />
@@ -103,18 +104,18 @@ export function BeneficiariesTab() {
       <ConfirmDialog
         open={!!removing}
         onClose={() => setRemoving(null)}
-        title="Remove beneficiary?"
-        description={removing ? `"${removing.nickname}" will no longer appear in the saved payee list. Past payments are unaffected.` : undefined}
-        confirmLabel="Remove"
+        title={t("Remove beneficiary?")}
+        description={removing ? t("\"{name}\" will no longer appear in the saved payee list. Past payments are unaffected.", { name: removing.nickname }) : undefined}
+        confirmLabel={t("Remove")}
         tone="danger"
         onConfirm={async () => {
           if (!removing) return;
           try {
             await api.delete(`/beneficiaries/${removing.id}`);
-            toast.success("Beneficiary removed");
+            toast.success(t("Beneficiary removed"));
             qc.invalidateQueries({ queryKey: ["beneficiaries"] });
           } catch (err) {
-            toast.error("Could not remove beneficiary", { description: err instanceof ApiError ? err.message : undefined });
+            toast.error(t("Could not remove beneficiary"), { description: err instanceof ApiError ? err.message : undefined });
           } finally {
             setRemoving(null);
           }
@@ -155,10 +156,10 @@ function BeneficiaryFormDialog({
     try {
       if (beneficiary) await api.patch(`/beneficiaries/${beneficiary.id}`, payload);
       else await api.post("/beneficiaries", payload);
-      toast.success("Beneficiary saved");
+      toast.success(t("Beneficiary saved"));
       onSaved();
     } catch (err) {
-      toast.error("Could not save beneficiary", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Could not save beneficiary"), { description: err instanceof ApiError ? err.message : undefined });
     }
   });
 
@@ -166,20 +167,20 @@ function BeneficiaryFormDialog({
     <Dialog
       open
       onClose={onClose}
-      title={beneficiary ? "Edit Beneficiary" : "Add Beneficiary"}
-      description="Saved payees prefill the beneficiary fields on a new payment."
+      title={beneficiary ? t("Edit Beneficiary") : t("Add Beneficiary")}
+      description={t("Saved payees prefill the beneficiary fields on a new payment.")}
       footer={
         <>
           {onDelete && (
             <Button variant="outline" className="mr-auto text-status-critical" onClick={onDelete}>
-              Remove
+              {t("Remove")}
             </Button>
           )}
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button onClick={onSubmit} loading={isSubmitting}>
-            Save
+            {t("Save")}
           </Button>
         </>
       }
@@ -187,14 +188,14 @@ function BeneficiaryFormDialog({
       <form className="space-y-4" onSubmit={onSubmit}>
         <div>
           <Label htmlFor="nickname" required>
-            Nickname
+            {t("Nickname")}
           </Label>
-          <Input id="nickname" {...register("nickname")} error={!!errors.nickname} placeholder="e.g. Main Landlord" />
+          <Input id="nickname" {...register("nickname")} error={!!errors.nickname} placeholder={t("e.g. Main Landlord")} />
           <ErrorText>{errors.nickname?.message}</ErrorText>
         </div>
         <div>
           <Label htmlFor="accountName" required>
-            Account Holder Name
+            {t("Account Holder Name")}
           </Label>
           <Input id="accountName" {...register("accountName")} error={!!errors.accountName} />
           <ErrorText>{errors.accountName?.message}</ErrorText>
@@ -202,21 +203,21 @@ function BeneficiaryFormDialog({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label htmlFor="accountNumber" required>
-              Account Number
+              {t("Account Number")}
             </Label>
             <Input id="accountNumber" {...register("accountNumber")} error={!!errors.accountNumber} />
             <ErrorText>{errors.accountNumber?.message}</ErrorText>
           </div>
           <div>
             <Label htmlFor="bankName" required>
-              Bank
+              {t("Bank")}
             </Label>
             <Input id="bankName" {...register("bankName")} error={!!errors.bankName} />
             <ErrorText>{errors.bankName?.message}</ErrorText>
           </div>
         </div>
         <div>
-          <Label htmlFor="currencyCode">Currency (optional)</Label>
+          <Label htmlFor="currencyCode">{t("Currency (optional)")}</Label>
           <Input id="currencyCode" {...register("currencyCode")} placeholder="MYR" maxLength={3} className="w-24 uppercase" />
         </div>
       </form>

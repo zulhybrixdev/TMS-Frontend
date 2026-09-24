@@ -1,6 +1,7 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ChartTooltip } from "./ChartTooltip";
 import { formatCompact } from "../../lib/format";
+import { t } from "../../i18n";
 
 export function MonthlyVolumeChart({ data, currency = "MYR" }: { data: { month: string; total: number; count: number }[]; currency?: string }) {
   return (
@@ -10,7 +11,7 @@ export function MonthlyVolumeChart({ data, currency = "MYR" }: { data: { month: 
         <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--ink-muted)" }} axisLine={{ stroke: "var(--baseline)" }} tickLine={false} />
         <YAxis tickFormatter={(v) => formatCompact(v)} tick={{ fontSize: 11, fill: "var(--ink-muted)" }} axisLine={false} tickLine={false} width={56} />
         <Tooltip content={<ChartTooltip currency={currency} />} cursor={{ fill: "var(--plane)" }} />
-        <Bar dataKey="total" name="Payments Processed" fill="var(--series-2)" radius={[4, 4, 0, 0]} maxBarSize={36} />
+        <Bar dataKey="total" name={t("Payments Processed")} fill="var(--series-2)" radius={[4, 4, 0, 0]} maxBarSize={36} />
       </BarChart>
     </ResponsiveContainer>
   );

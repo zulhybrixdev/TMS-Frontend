@@ -15,6 +15,7 @@ import { Button } from "../../components/ui/Button";
 import { Dialog, ConfirmDialog } from "../../components/ui/Dialog";
 import { Input, Label, Select, ErrorText } from "../../components/ui/Input";
 import { formatDate } from "../../lib/format";
+import { t } from "../../i18n";
 
 export function UsersTab() {
   const qc = useQueryClient();
@@ -31,7 +32,7 @@ export function UsersTab() {
   const columns: Column<UserRow>[] = [
     {
       key: "name",
-      header: "Name",
+      header: t("Name"),
       render: (r) => (
         <div>
           <p className="font-medium text-ink">{r.name}</p>
@@ -39,22 +40,22 @@ export function UsersTab() {
         </div>
       ),
     },
-    { key: "jobTitle", header: "Job Title", render: (r) => r.jobTitle ?? "—" },
-    { key: "department", header: "Department", render: (r) => r.department ?? "—" },
-    { key: "roles", header: "Roles", render: (r) => <div className="flex flex-wrap gap-1">{r.roles.map((role) => <Badge key={role.id} tone="brand">{role.name}</Badge>)}</div> },
-    { key: "status", header: "Status", render: (r) => <StatusBadge status={r.status} /> },
-    { key: "lastLoginAt", header: "Last Login", render: (r) => <span className="text-xs text-ink-muted">{r.lastLoginAt ? formatDate(r.lastLoginAt) : "Never"}</span> },
+    { key: "jobTitle", header: t("Job Title"), render: (r) => r.jobTitle ?? "—" },
+    { key: "department", header: t("Department"), render: (r) => r.department ?? "—" },
+    { key: "roles", header: t("Roles"), render: (r) => <div className="flex flex-wrap gap-1">{r.roles.map((role) => <Badge key={role.id} tone="brand">{role.name}</Badge>)}</div> },
+    { key: "status", header: t("Status"), render: (r) => <StatusBadge status={r.status} /> },
+    { key: "lastLoginAt", header: t("Last Login"), render: (r) => <span className="text-xs text-ink-muted">{r.lastLoginAt ? formatDate(r.lastLoginAt) : t("Never")}</span> },
     {
       key: "actions",
       header: "",
       align: "right",
       render: (r) => (
         <div className="flex justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
-          <Button size="sm" variant="ghost" onClick={() => setResetTarget(r)} title="Reset password">
+          <Button size="sm" variant="ghost" onClick={() => setResetTarget(r)} title={t("Reset password")}>
             <KeyRound className="h-3.5 w-3.5" />
           </Button>
           {r.status === "ACTIVE" && (
-            <Button size="sm" variant="ghost" onClick={() => setDeactivateTarget(r)} title="Deactivate">
+            <Button size="sm" variant="ghost" onClick={() => setDeactivateTarget(r)} title={t("Deactivate")}>
               <UserX className="h-3.5 w-3.5 text-status-critical" />
             </Button>
           )}
@@ -68,7 +69,7 @@ export function UsersTab() {
       <Toolbar
         search={list.search}
         onSearch={list.setSearch}
-        placeholder="Search users..."
+        placeholder={t("Search users...")}
         actions={
           <Button
             onClick={() => {
@@ -76,7 +77,7 @@ export function UsersTab() {
               setFormOpen(true);
             }}
           >
-            <Plus className="h-4 w-4" /> Add User
+            <Plus className="h-4 w-4" /> {t("Add User")}
           </Button>
         }
       />
@@ -84,7 +85,7 @@ export function UsersTab() {
       {list.isLoading ? (
         <SkeletonTable cols={6} />
       ) : list.data.length === 0 ? (
-        <EmptyState title="No users found" />
+        <EmptyState title={t("No users found")} />
       ) : (
         <DataTable
           columns={columns}
@@ -109,17 +110,17 @@ export function UsersTab() {
           if (!deactivateTarget) return;
           try {
             await api.delete(`/users/${deactivateTarget.id}`);
-            toast.success("User deactivated");
+            toast.success(t("User deactivated"));
             refresh();
           } catch (err) {
-            toast.error("Failed", { description: err instanceof ApiError ? err.message : undefined });
+            toast.error(t("Failed"), { description: err instanceof ApiError ? err.message : undefined });
           } finally {
             setDeactivateTarget(null);
           }
         }}
-        title="Deactivate user?"
-        description={`${deactivateTarget?.name} will no longer be able to sign in.`}
-        confirmLabel="Deactivate"
+        title={t("Deactivate user?")}
+        description={t("{name} will no longer be able to sign in.", { name: deactivateTarget?.name })}
+        confirmLabel={t("Deactivate")}
         tone="danger"
       />
     </div>
@@ -159,14 +160,14 @@ function UserFormDialog({ user, roles, onClose, onSaved }: { user: UserRow | nul
     try {
       if (isEdit) {
         await api.patch(`/users/${user!.id}`, { name: values.name, jobTitle: values.jobTitle, department: values.department, status: values.status, roleIds: values.roleIds });
-        toast.success("User updated");
+        toast.success(t("User updated"));
       } else {
         await api.post("/users", { email: values.email, name: values.name, jobTitle: values.jobTitle, department: values.department, password: values.password, roleIds: values.roleIds });
-        toast.success("User created");
+        toast.success(t("User created"));
       }
       onSaved();
     } catch (err) {
-      toast.error("Could not save user", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Could not save user"), { description: err instanceof ApiError ? err.message : undefined });
     }
   });
 
@@ -174,14 +175,14 @@ function UserFormDialog({ user, roles, onClose, onSaved }: { user: UserRow | nul
     <Dialog
       open
       onClose={onClose}
-      title={isEdit ? "Edit User" : "Add User"}
+      title={isEdit ? t("Edit User") : t("Add User")}
       footer={
         <>
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button onClick={onSubmit} loading={isSubmitting}>
-            Save
+            {t("Save")}
           </Button>
         </>
       }
@@ -190,25 +191,25 @@ function UserFormDialog({ user, roles, onClose, onSaved }: { user: UserRow | nul
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label htmlFor="name" required>
-              Full Name
+              {t("Full Name")}
             </Label>
             <Input id="name" {...register("name", { required: true })} />
           </div>
           <div>
             <Label htmlFor="email" required>
-              Email
+              {t("Email")}
             </Label>
             <Input id="email" type="email" disabled={isEdit} {...register("email", { required: true })} />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label htmlFor="jobTitle">Job Title</Label>
+            <Label htmlFor="jobTitle">{t("Job Title")}</Label>
             <Input id="jobTitle" {...register("jobTitle")} />
           </div>
           <div>
-            <Label htmlFor="department">Department / Cost Center</Label>
-            <Input id="department" list="department-options" placeholder="e.g. Finance, Ops" {...register("department")} />
+            <Label htmlFor="department">{t("Department / Cost Center")}</Label>
+            <Input id="department" list="department-options" placeholder={t("e.g. Finance, Ops")} {...register("department")} />
             <datalist id="department-options">
               {departments?.map((d) => (
                 <option key={d} value={d} />
@@ -219,24 +220,24 @@ function UserFormDialog({ user, roles, onClose, onSaved }: { user: UserRow | nul
         {!isEdit && (
           <div>
             <Label htmlFor="password" required>
-              Temporary Password
+              {t("Temporary Password")}
             </Label>
             <Input id="password" type="password" {...register("password", { required: !isEdit, minLength: 8 })} />
-            <ErrorText>{errors.password && "Minimum 8 characters"}</ErrorText>
+            <ErrorText>{errors.password && t("Minimum 8 characters")}</ErrorText>
           </div>
         )}
         {isEdit && (
           <div>
-            <Label htmlFor="status">Status</Label>
+            <Label htmlFor="status">{t("Status")}</Label>
             <Select id="status" {...register("status")}>
-              <option value="ACTIVE">Active</option>
-              <option value="INACTIVE">Inactive</option>
-              <option value="LOCKED">Locked</option>
+              <option value="ACTIVE">{t("Active")}</option>
+              <option value="INACTIVE">{t("Inactive")}</option>
+              <option value="LOCKED">{t("Locked")}</option>
             </Select>
           </div>
         )}
         <div>
-          <Label required>Roles</Label>
+          <Label required>{t("Roles")}</Label>
           <div className="flex flex-wrap gap-2">
             {roles.map((role) => (
               <button
@@ -263,10 +264,10 @@ function ResetPasswordDialog({ user, onClose, onDone }: { user: UserRow; onClose
   const onSubmit = handleSubmit(async (values) => {
     try {
       await api.post(`/users/${user.id}/reset-password`, values);
-      toast.success("Password reset", { description: `Share the new password with ${user.name} securely.` });
+      toast.success(t("Password reset"), { description: t("Share the new password with {name} securely.", { name: user.name }) });
       onDone();
     } catch (err) {
-      toast.error("Could not reset password", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Could not reset password"), { description: err instanceof ApiError ? err.message : undefined });
     }
   });
 
@@ -274,21 +275,21 @@ function ResetPasswordDialog({ user, onClose, onDone }: { user: UserRow; onClose
     <Dialog
       open
       onClose={onClose}
-      title={`Reset password for ${user.name}`}
+      title={t("Reset password for {name}", { name: user.name })}
       footer={
         <>
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button onClick={onSubmit} loading={isSubmitting}>
-            Reset Password
+            {t("Reset Password")}
           </Button>
         </>
       }
     >
       <form onSubmit={onSubmit}>
         <Label htmlFor="newPassword" required>
-          New Password
+          {t("New Password")}
         </Label>
         <Input id="newPassword" type="password" {...register("newPassword", { required: true, minLength: 8 })} />
       </form>

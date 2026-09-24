@@ -16,6 +16,7 @@ import { CommentThread } from "../components/comments/CommentThread";
 import { formatDate, formatDateTime, formatMoney } from "../lib/format";
 import { useAuth } from "../lib/auth-context";
 import { PERMISSIONS } from "../lib/permissions";
+import { t } from "../i18n";
 
 export default function TransferDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -37,13 +38,13 @@ export default function TransferDetailPage() {
     setBusy(true);
     try {
       await api.post(`/transfers/${id}/submit`);
-      toast.success("Transfer submitted for approval");
+      toast.success(t("Transfer submitted for approval"));
       qc.invalidateQueries({ queryKey: ["transfer", id] });
       qc.invalidateQueries({ queryKey: ["transfers"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       setConfirmSubmit(false);
     } catch (err) {
-      toast.error("Could not submit transfer", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Could not submit transfer"), { description: err instanceof ApiError ? err.message : undefined });
     } finally {
       setBusy(false);
     }
@@ -53,12 +54,12 @@ export default function TransferDetailPage() {
     setBusy(true);
     try {
       await api.post(`/transfers/${id}/cancel`);
-      toast.success("Transfer cancelled");
+      toast.success(t("Transfer cancelled"));
       qc.invalidateQueries({ queryKey: ["transfer", id] });
       qc.invalidateQueries({ queryKey: ["transfers"] });
       setConfirmCancel(false);
     } catch (err) {
-      toast.error("Could not cancel transfer", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Could not cancel transfer"), { description: err instanceof ApiError ? err.message : undefined });
     } finally {
       setBusy(false);
     }
@@ -72,7 +73,7 @@ export default function TransferDetailPage() {
   return (
     <>
       <button onClick={() => navigate("/transfers")} className="mb-4 flex items-center gap-1.5 text-[13px] text-ink-secondary hover:text-ink">
-        <ArrowLeft className="h-3.5 w-3.5" /> Back to Transfers
+        <ArrowLeft className="h-3.5 w-3.5" /> {t("Back to Transfers")}
       </button>
 
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
@@ -80,7 +81,7 @@ export default function TransferDetailPage() {
           <div className="flex items-center gap-2.5">
             <h1 className="text-[22px] font-semibold text-ink">{transfer.transferNumber}</h1>
             <StatusBadge status={transfer.status} />
-            {transfer.isSystemRecommended && <Badge tone="brand">System recommended</Badge>}
+            {transfer.isSystemRecommended && <Badge tone="brand">{t("System recommended")}</Badge>}
           </div>
           <p className="mt-1 text-sm text-ink-secondary">
             {transfer.sourceAccountName} → {transfer.destinationAccountName} · {formatMoney(transfer.amount, transfer.currencyCode)}
@@ -91,16 +92,16 @@ export default function TransferDetailPage() {
             {transfer.status === "DRAFT" && (
               <>
                 <Button variant="outline" onClick={() => setConfirmCancel(true)}>
-                  <XCircle className="h-4 w-4" /> Cancel
+                  <XCircle className="h-4 w-4" /> {t("Cancel")}
                 </Button>
                 <Button onClick={() => setConfirmSubmit(true)}>
-                  <Send className="h-4 w-4" /> Submit for Approval
+                  <Send className="h-4 w-4" /> {t("Submit for Approval")}
                 </Button>
               </>
             )}
             {(transfer.status === "PENDING_APPROVAL" || transfer.status === "APPROVED") && (
               <Button variant="outline" onClick={() => setConfirmCancel(true)}>
-                <XCircle className="h-4 w-4" /> {transfer.status === "APPROVED" ? "Cancel Transfer" : "Cancel Request"}
+                <XCircle className="h-4 w-4" /> {transfer.status === "APPROVED" ? t("Cancel Transfer") : t("Cancel Request")}
               </Button>
             )}
           </div>
@@ -109,36 +110,36 @@ export default function TransferDetailPage() {
 
       {transfer.status === "APPROVED" && (
         <div className="mb-4 rounded-lg border border-brand/30 bg-brand-soft px-4 py-3 text-[13px] text-brand">
-          <p className="font-medium">Approved - scheduled for {formatDate(transfer.transferDate)}</p>
-          <p className="mt-0.5 text-ink-secondary">The funds move on the transfer date and are posted automatically. Until then it can still be cancelled.</p>
+          <p className="font-medium">{t("Approved - scheduled for {date}", { date: formatDate(transfer.transferDate) })}</p>
+          <p className="mt-0.5 text-ink-secondary">{t("The funds move on the transfer date and are posted automatically. Until then it can still be cancelled.")}</p>
         </div>
       )}
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader>
-            <CardTitle>Transfer Details</CardTitle>
+            <CardTitle>{t("Transfer Details")}</CardTitle>
           </CardHeader>
           <CardBody className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <Field label="Source Account" value={`${transfer.sourceAccountName} (${transfer.sourceBankName})`} />
-            <Field label="Destination Account" value={`${transfer.destinationAccountName} (${transfer.destinationBankName})`} />
-            <Field label="Amount" value={formatMoney(transfer.amount, transfer.currencyCode)} />
-            {transfer.suggestedAmount != null && <Field label="Originally Suggested" value={formatMoney(transfer.suggestedAmount, transfer.currencyCode)} />}
-            <Field label="Transfer Date" value={formatDate(transfer.transferDate)} />
-            <Field label="Requested By" value={transfer.requestedBy.name} />
-            <Field label="Created" value={formatDateTime(transfer.createdAt)} />
+            <Field label={t("Source Account")} value={`${transfer.sourceAccountName} (${transfer.sourceBankName})`} />
+            <Field label={t("Destination Account")} value={`${transfer.destinationAccountName} (${transfer.destinationBankName})`} />
+            <Field label={t("Amount")} value={formatMoney(transfer.amount, transfer.currencyCode)} />
+            {transfer.suggestedAmount != null && <Field label={t("Originally Suggested")} value={formatMoney(transfer.suggestedAmount, transfer.currencyCode)} />}
+            <Field label={t("Transfer Date")} value={formatDate(transfer.transferDate)} />
+            <Field label={t("Requested By")} value={transfer.requestedBy.name} />
+            <Field label={t("Created")} value={formatDateTime(transfer.createdAt)} />
             <div className="col-span-full">
-              <Field label="Reason" value={transfer.reason || "—"} />
+              <Field label={t("Reason")} value={transfer.reason || "—"} />
             </div>
           </CardBody>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Approval Status</CardTitle>
+            <CardTitle>{t("Approval Status")}</CardTitle>
           </CardHeader>
           <CardBody>
-            {!latestApproval ? <p className="text-[13px] text-ink-muted">This transfer has not been submitted for approval yet.</p> : <ApprovalTimeline request={latestApproval} />}
+            {!latestApproval ? <p className="text-[13px] text-ink-muted">{t("This transfer has not been submitted for approval yet.")}</p> : <ApprovalTimeline request={latestApproval} />}
           </CardBody>
         </Card>
       </div>
@@ -151,18 +152,18 @@ export default function TransferDetailPage() {
         open={confirmSubmit}
         onClose={() => setConfirmSubmit(false)}
         onConfirm={submit}
-        title="Submit transfer for approval?"
-        description={`This will send ${transfer.transferNumber} into the approval workflow.`}
-        confirmLabel="Submit"
+        title={t("Submit transfer for approval?")}
+        description={t("This will send {number} into the approval workflow.", { number: transfer.transferNumber })}
+        confirmLabel={t("Submit")}
         loading={busy}
       />
       <ConfirmDialog
         open={confirmCancel}
         onClose={() => setConfirmCancel(false)}
         onConfirm={cancel}
-        title="Cancel this transfer?"
-        description="This action cannot be undone."
-        confirmLabel="Cancel Transfer"
+        title={t("Cancel this transfer?")}
+        description={t("This action cannot be undone.")}
+        confirmLabel={t("Cancel Transfer")}
         tone="danger"
         loading={busy}
       />

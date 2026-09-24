@@ -2,6 +2,10 @@
 // envelope, paginates via {items,meta}, and normalises backend errors into
 // a typed ApiError so callers/toasts can show a clean message.
 
+import { t } from "../i18n";
+import { tServer } from "../i18n/server-messages";
+import { notifyMaintenance } from "./maintenance-events";
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
 export class ApiError extends Error {
@@ -40,7 +44,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const isCredentialCheck = /^\/auth\/(login|register|mfa\/challenge)/.test(path);
   if (res.status === 401 && !isCredentialCheck) {
     onUnauthorized?.();
-    throw new ApiError(401, "Session expired. Please sign in again.");
+    throw new ApiError(401, t("Session expired. Please sign in again."));
   }
 
   const contentType = res.headers.get("content-type") ?? "";
@@ -52,7 +56,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const json = await res.json();
   if (!res.ok || json.success === false) {
     const err = json.error ?? {};
-    throw new ApiError(res.status, err.message || "Something went wrong", err.code, err.details);
+    if (res.status === 503 && err.code === "MAINTENANCE_MODE") notifyMaintenance();
+    throw new ApiError(res.status, tServer(err.message || "Something went wrong"), err.code, err.details);
   }
   return json as T;
 }
@@ -73,7 +78,7 @@ export const api = {
   async downloadCsv(path: string, filename: string) {
     const token = getToken();
     const res = await fetch(`${BASE_URL}${path}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
-    if (!res.ok) throw new ApiError(res.status, "Export failed");
+    if (!res.ok) throw new ApiError(res.status, t("Export failed"));
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

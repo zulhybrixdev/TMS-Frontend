@@ -7,7 +7,7 @@ import { Building2, CircleDollarSign, Eye, FlaskConical, History, KeyRound, LogO
 import { usePlatformAuth, ConnectedEnvironment } from "../../lib/platform-auth-context";
 import { platformApiFor, ApiError } from "../../lib/platform-api-client";
 import type { PlatformEnvironment } from "../../lib/platform-environments";
-import type { PlatformTenantRow } from "../../lib/platform-types";
+import type { PlatformConfig, PlatformTenantRow } from "../../lib/platform-types";
 import type { AuthUser, PlanKey } from "../../lib/types";
 import { DataTable } from "../../components/ui/Table";
 import { Badge, StatusBadge } from "../../components/ui/Badge";
@@ -35,15 +35,13 @@ function originOf(apiBase: string): string {
 }
 
 export default function PlatformDashboardPage() {
-  const { connected, logout } = usePlatformAuth();
+  const { connected } = usePlatformAuth();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [managing, setManaging] = useState<EnvTenantRow | null>(null);
   const [confirmSuspend, setConfirmSuspend] = useState<EnvTenantRow | null>(null);
   const [viewingAuditLog, setViewingAuditLog] = useState<EnvTenantRow | null>(null);
   const [ssoTenant, setSsoTenant] = useState<EnvTenantRow | null>(null);
-  const [confirmModeSwitch, setConfirmModeSwitch] = useState(false);
-  const [switchingMode, setSwitchingMode] = useState(false);
 
   const connectedKeys = connected.map((c) => c.env.key).join(",");
 
@@ -61,31 +59,7 @@ export default function PlatformDashboardPage() {
     enabled: connected.length > 0,
   });
 
-  // The live POC/full switch only means anything for the uat environment -
-  // production never mounts /poc at all, so there's nothing to toggle there.
-  const uatConn = connected.find((c) => c.env.key === "uat");
-  const { data: config } = useQuery({
-    queryKey: ["platform", "config", "uat"],
-    queryFn: () => platformApiFor(uatConn!.env).get<{ pocMode: boolean }>("/config"),
-    enabled: !!uatConn,
-  });
-
   const refresh = () => qc.invalidateQueries({ queryKey: ["platform", "tenants"] });
-
-  const toggleMode = async () => {
-    if (!uatConn) return;
-    setSwitchingMode(true);
-    try {
-      const result = await platformApiFor(uatConn.env).post<{ pocMode: boolean }>("/config", { pocMode: !config?.pocMode });
-      qc.setQueryData(["platform", "config", "uat"], result);
-      toast.success(result.pocMode ? "UAT is now live in POC mode" : "UAT is now live in full mode");
-    } catch (err) {
-      toast.error("Could not switch mode", { description: err instanceof ApiError ? err.message : undefined });
-    } finally {
-      setSwitchingMode(false);
-      setConfirmModeSwitch(false);
-    }
-  };
 
   const filtered = useMemo(() => {
     const rows = tenantsByEnv ?? [];
@@ -131,53 +105,8 @@ export default function PlatformDashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-plane">
-      <header className="ledger-grid sticky top-0 z-30 flex h-14 items-center justify-between border-b border-chrome-border bg-chrome px-4 md:px-6">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-white/10 text-white ring-1 ring-white/15">
-            <ShieldAlert className="h-4 w-4" />
-          </div>
-          <div className="leading-tight">
-            <p className="font-display text-[13.5px] font-semibold text-chrome-ink">Platform Console</p>
-            <p className="text-[10.5px] uppercase tracking-wider text-chrome-muted">Cross-tenant oversight</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {uatConn && config && (
-            <button
-              onClick={() => setConfirmModeSwitch(true)}
-              className={clsx(
-                "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium transition-colors",
-                config.pocMode ? "bg-status-warning-soft text-status-warning" : "bg-status-good-soft text-status-good"
-              )}
-            >
-              <FlaskConical className="h-3.5 w-3.5" />
-              UAT live: {config.pocMode ? "POC" : "Full app"}
-            </button>
-          )}
-          <div className="hidden items-center gap-1.5 sm:flex">
-            {connected.map((c) => (
-              <span key={c.env.key} className="rounded-full bg-white/10 px-2 py-1 text-[11px] font-medium text-chrome-muted">
-                {c.env.label}
-              </span>
-            ))}
-          </div>
-          <div className="hidden items-center gap-2 sm:flex">
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-[10px] font-semibold text-white">{initials(connected[0]?.admin.name ?? "?")}</div>
-            <span className="text-[13px] text-chrome-muted">{connected[0]?.admin.name}</span>
-          </div>
-          <Button size="sm" variant="ghost" onClick={logout} className="text-chrome-muted hover:bg-white/5 hover:text-chrome-ink">
-            <LogOut className="h-3.5 w-3.5" /> Sign out
-          </Button>
-        </div>
-      </header>
-
-      <motion.main
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="mx-auto max-w-6xl px-4 py-6 md:px-8 md:py-8"
-      >
+    <div>
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}>
         <div className="mb-6">
           <h1 className="font-display text-[24px] font-semibold tracking-tight text-ink">Tenants</h1>
           <p className="mt-1 text-sm text-ink-secondary">
@@ -197,6 +126,7 @@ export default function PlatformDashboardPage() {
             </>
           )}
         </div>
+
 
         <Card className="mt-5">
           <Toolbar search={search} onSearch={setSearch} placeholder="Search tenants..." />
@@ -268,7 +198,7 @@ export default function PlatformDashboardPage() {
             />
           )}
         </Card>
-      </motion.main>
+      </motion.div>
 
       {ssoTenant && <TenantSsoDialog tenant={ssoTenant} env={ssoTenant.conn.env} onClose={() => setSsoTenant(null)} />}
 
@@ -300,19 +230,6 @@ export default function PlatformDashboardPage() {
         confirmLabel={confirmSuspend?.status === "SUSPENDED" ? "Reactivate" : "Suspend"}
       />
 
-      <ConfirmDialog
-        open={confirmModeSwitch}
-        onClose={() => setConfirmModeSwitch(false)}
-        onConfirm={toggleMode}
-        loading={switchingMode}
-        title={config?.pocMode ? "Switch UAT's live site to the full app?" : "Switch UAT's live site to POC mode?"}
-        description={
-          config?.pocMode
-            ? "Every visitor to the UAT/POC environment will be redirected away from /poc to the full app, immediately. Production is unaffected."
-            : "Every visitor to the UAT/POC environment will be redirected to /poc, immediately. Production is unaffected - it never serves /poc at all."
-        }
-        confirmLabel="Switch"
-      />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { api, getToken, registerUnauthorizedHandler, setToken } from "./api-client";
 import type { AuthUser } from "./types";
+import { t } from "../i18n";
 
 export interface RegisterInput {
   companyName: string;
@@ -10,6 +11,11 @@ export interface RegisterInput {
   email: string;
   password: string;
   jobTitle?: string;
+  // Consent captured on the registration form; the server refuses anything else than true.
+  acceptTerms: true;
+  acceptPrivacy: true;
+  termsVersion: string;
+  privacyVersion: string;
 }
 
 interface AuthContextValue {
@@ -86,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const verifyMfaChallenge = useCallback(
     async (code: string) => {
-      if (!mfaChallengeToken) throw new Error("No MFA challenge in progress");
+      if (!mfaChallengeToken) throw new Error(t("No MFA challenge in progress"));
       const result = await api.post<{ token: string; user: AuthUser }>("/auth/mfa/challenge", { challengeToken: mfaChallengeToken, code });
       setToken(result.token);
       setUser(result.user);

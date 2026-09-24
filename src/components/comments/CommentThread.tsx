@@ -11,6 +11,7 @@ import { Skeleton } from "../ui/Skeleton";
 import { formatRelative, initials } from "../../lib/format";
 import { useAuth } from "../../lib/auth-context";
 import { PERMISSIONS } from "../../lib/permissions";
+import { t } from "../../i18n";
 
 // Renders "@Name" spans found in a comment body as highlighted chips - the
 // body is stored as plain text (see backend comments.service.ts), this is
@@ -76,7 +77,7 @@ export function CommentThread({ entityType, entityId }: { entityType: "PAYMENT" 
       setMentionedUserIds([]);
       qc.invalidateQueries({ queryKey: ["comments", entityType, entityId] });
     } catch (err) {
-      toast.error("Could not post comment", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Could not post comment"), { description: err instanceof ApiError ? err.message : undefined });
     } finally {
       setSubmitting(false);
     }
@@ -87,7 +88,7 @@ export function CommentThread({ entityType, entityId }: { entityType: "PAYMENT" 
       await api.delete(`/comments/${id}`);
       qc.invalidateQueries({ queryKey: ["comments", entityType, entityId] });
     } catch (err) {
-      toast.error("Could not delete comment", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Could not delete comment"), { description: err instanceof ApiError ? err.message : undefined });
     }
   };
 
@@ -95,7 +96,7 @@ export function CommentThread({ entityType, entityId }: { entityType: "PAYMENT" 
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-1.5">
-          <MessageSquare className="h-4 w-4 text-ink-muted" /> Comments {comments && comments.length > 0 ? `(${comments.length})` : ""}
+          <MessageSquare className="h-4 w-4 text-ink-muted" /> {t("Comments")} {comments && comments.length > 0 ? `(${comments.length})` : ""}
         </CardTitle>
       </CardHeader>
       <CardBody className="space-y-4">
@@ -113,7 +114,7 @@ export function CommentThread({ entityType, entityId }: { entityType: "PAYMENT" 
                       <p className="text-[13px] font-medium text-ink">{c.author.name}</p>
                       <p className="text-[11px] text-ink-muted">{formatRelative(c.createdAt)}</p>
                       {(c.author.id === user?.id || canModerate) && (
-                        <button onClick={() => remove(c.id)} className="ml-auto text-ink-muted opacity-0 transition-opacity hover:text-status-critical group-hover:opacity-100" aria-label="Delete comment">
+                        <button onClick={() => remove(c.id)} className="ml-auto text-ink-muted opacity-0 transition-opacity hover:text-status-critical group-hover:opacity-100" aria-label={t("Delete comment")}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       )}
@@ -125,7 +126,7 @@ export function CommentThread({ entityType, entityId }: { entityType: "PAYMENT" 
             })}
           </div>
         ) : (
-          <p className="text-[13px] text-ink-muted">No comments yet - start the discussion below.</p>
+          <p className="text-[13px] text-ink-muted">{t("No comments yet - start the discussion below.")}</p>
         )}
 
         <div className="relative border-t border-border pt-3">
@@ -134,7 +135,7 @@ export function CommentThread({ entityType, entityId }: { entityType: "PAYMENT" 
             rows={2}
             value={body}
             onChange={(e) => onBodyChange(e.target.value)}
-            placeholder="Add a comment - type @ to mention a colleague..."
+            placeholder={t("Add a comment - type @ to mention a colleague...")}
             className="text-[13.5px]"
           />
           {mentionQuery !== null && mentionMatches.length > 0 && (
@@ -153,7 +154,7 @@ export function CommentThread({ entityType, entityId }: { entityType: "PAYMENT" 
           )}
           <div className="mt-2 flex justify-end">
             <Button size="sm" onClick={submit} loading={submitting} disabled={!body.trim()}>
-              <Send className="h-3.5 w-3.5" /> Comment
+              <Send className="h-3.5 w-3.5" /> {t("Comment")}
             </Button>
           </div>
         </div>

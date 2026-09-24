@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../lib/auth-context";
+import { t } from "../i18n";
 
 // Landing page for the backend's /auth/sso/callback redirect (see
 // TMS-Backend's sso.routes.ts) - the token travels in the URL fragment,
@@ -18,15 +19,15 @@ export default function SsoCallbackPage() {
     const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : window.location.hash;
     const token = new URLSearchParams(hash).get("token");
     if (!token) {
-      setError("Missing sign-in token from SSO callback");
+      setError(t("Missing sign-in token from SSO callback"));
       return;
     }
     completeLoginWithToken(token)
       .then(() => {
-        toast.success("Signed in via SSO");
+        toast.success(t("Signed in via SSO"));
         navigate("/", { replace: true });
       })
-      .catch(() => setError("Could not complete SSO sign-in"));
+      .catch(() => setError(t("Could not complete SSO sign-in")));
   }, [completeLoginWithToken, navigate]);
 
   return (
@@ -35,13 +36,13 @@ export default function SsoCallbackPage() {
         <>
           <p className="text-[15px] font-medium text-status-critical">{error}</p>
           <button onClick={() => navigate("/login", { replace: true })} className="text-[13px] text-brand hover:underline">
-            Back to sign in
+            {t("Back to sign in")}
           </button>
         </>
       ) : (
         <>
           <Loader2 className="h-6 w-6 animate-spin text-brand" />
-          <p className="text-[13px] text-ink-secondary">Completing sign-in...</p>
+          <p className="text-[13px] text-ink-secondary">{t("Completing sign-in...")}</p>
         </>
       )}
     </div>

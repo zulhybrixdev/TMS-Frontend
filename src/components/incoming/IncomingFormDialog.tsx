@@ -9,12 +9,13 @@ import { useAllAccounts } from "../../hooks/useReferenceData";
 import { api, ApiError } from "../../lib/api-client";
 import { todayLocal } from "../../lib/format";
 import type { IncomingTransaction } from "../../lib/types";
+import { t, tk } from "../../i18n";
 
 const schema = z.object({
-  sourceName: z.string().min(2, "Source name is required"),
-  amount: z.coerce.number().positive("Amount must be greater than zero"),
+  sourceName: z.string().min(2, tk("Source name is required")),
+  amount: z.coerce.number().positive(tk("Amount must be greater than zero")),
   currencyCode: z.string().length(3),
-  destinationAccountId: z.string().min(1, "Destination account is required"),
+  destinationAccountId: z.string().min(1, tk("Destination account is required")),
   valueDate: z.string().min(1),
   invoiceNumber: z.string().optional(),
   floatDays: z.coerce.number().int().min(0).max(2),
@@ -35,11 +36,11 @@ export function IncomingFormDialog({ open, onClose, onSaved }: { open: boolean; 
   const onSubmit = async (values: FormValues) => {
     try {
       const row = await api.post<IncomingTransaction>("/incoming-transactions", values);
-      toast.success("Incoming transaction recorded as expected");
+      toast.success(t("Incoming transaction recorded as expected"));
       reset();
       onSaved(row);
     } catch (err) {
-      toast.error("Could not save", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Could not save"), { description: err instanceof ApiError ? err.message : undefined });
     }
   };
 
@@ -47,15 +48,15 @@ export function IncomingFormDialog({ open, onClose, onSaved }: { open: boolean; 
     <Dialog
       open={open}
       onClose={onClose}
-      title="Record Incoming Transaction"
-      description="Log an expected collection with its due date. Mark it received once funds land."
+      title={t("Record Incoming Transaction")}
+      description={t("Log an expected collection with its due date. Mark it received once funds land.")}
       footer={
         <>
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button onClick={handleSubmit(onSubmit)} loading={isSubmitting}>
-            Save
+            {t("Save")}
           </Button>
         </>
       }
@@ -63,14 +64,14 @@ export function IncomingFormDialog({ open, onClose, onSaved }: { open: boolean; 
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <div>
           <Label htmlFor="sourceName" required>
-            Source (Payer)
+            {t("Source (Payer)")}
           </Label>
           <Input id="sourceName" {...register("sourceName")} error={!!errors.sourceName} />
           <ErrorText>{errors.sourceName?.message}</ErrorText>
         </div>
         <div>
           <Label htmlFor="destinationAccountId" required>
-            Destination Account
+            {t("Destination Account")}
           </Label>
           <Select
             id="destinationAccountId"
@@ -82,7 +83,7 @@ export function IncomingFormDialog({ open, onClose, onSaved }: { open: boolean; 
               if (acc) setValue("currencyCode", acc.currencyCode);
             }}
           >
-            <option value="">Select account</option>
+            <option value="">{t("Select account")}</option>
             {accounts?.items.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.accountName} ({a.bankName})
@@ -94,38 +95,38 @@ export function IncomingFormDialog({ open, onClose, onSaved }: { open: boolean; 
         <div className="grid grid-cols-3 gap-3">
           <div>
             <Label htmlFor="amount" required>
-              Amount
+              {t("Amount")}
             </Label>
             <Input id="amount" type="number" step="0.01" {...register("amount")} error={!!errors.amount} />
           </div>
           <div>
-            <Label htmlFor="currencyCode">Currency</Label>
+            <Label htmlFor="currencyCode">{t("Currency")}</Label>
             <Input id="currencyCode" {...register("currencyCode")} disabled />
           </div>
           <div>
             <Label htmlFor="valueDate" required>
-              Due Date
+              {t("Due Date")}
             </Label>
             <Input id="valueDate" type="date" {...register("valueDate")} />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label htmlFor="invoiceNumber">Invoice No.</Label>
-            <Input id="invoiceNumber" {...register("invoiceNumber")} placeholder="Sales invoice number" />
+            <Label htmlFor="invoiceNumber">{t("Invoice No.")}</Label>
+            <Input id="invoiceNumber" {...register("invoiceNumber")} placeholder={t("Sales invoice number")} />
           </div>
           <div>
-            <Label htmlFor="floatDays">Clearing (float)</Label>
+            <Label htmlFor="floatDays">{t("Clearing (float)")}</Label>
             <Select id="floatDays" {...register("floatDays")}>
-              <option value={0}>Cleared immediately</option>
-              <option value={1}>Day 1 float (cheque, T+1)</option>
-              <option value={2}>Day 2 float (cheque, T+2)</option>
+              <option value={0}>{t("Cleared immediately")}</option>
+              <option value={1}>{t("Day 1 float (cheque, T+1)")}</option>
+              <option value={2}>{t("Day 2 float (cheque, T+2)")}</option>
             </Select>
           </div>
         </div>
         <div>
-          <Label htmlFor="description">Description</Label>
-          <Textarea id="description" rows={2} {...register("description")} placeholder="Invoice reference, contract, etc." />
+          <Label htmlFor="description">{t("Description")}</Label>
+          <Textarea id="description" rows={2} {...register("description")} placeholder={t("Invoice reference, contract, etc.")} />
         </div>
       </form>
     </Dialog>

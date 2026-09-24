@@ -20,22 +20,23 @@ import { PERMISSIONS } from "../lib/permissions";
 import { formatDate, formatMoney, todayLocal } from "../lib/format";
 import type { ForecastEntry, ProjectionDetail } from "../lib/types";
 import { ForecastEntryDialog } from "../components/forecast/ForecastEntryDialog";
+import { t, tk, tEnum } from "../i18n";
 
 const HORIZONS = [
-  { label: "10 days", days: 10 },
-  { label: "14 days", days: 14 },
-  { label: "30 days", days: 30 },
-  { label: "60 days", days: 60 },
-  { label: "90 days", days: 90 },
+  { label: tk("10 days"), days: 10 },
+  { label: tk("14 days"), days: 14 },
+  { label: tk("30 days"), days: 30 },
+  { label: tk("60 days"), days: 60 },
+  { label: tk("90 days"), days: 90 },
 ];
 
 const confidenceTone = { HIGH: "good", MEDIUM: "warning", LOW: "neutral" } as const;
 
 type Metric = "available" | "liquidity" | "book";
 const METRIC_TABS: { key: Metric; label: string }[] = [
-  { key: "available", label: "Available" },
-  { key: "liquidity", label: "Available incl. overdraft" },
-  { key: "book", label: "Book balance" },
+  { key: "available", label: tk("Available") },
+  { key: "liquidity", label: tk("Available incl. overdraft") },
+  { key: "book", label: tk("Book balance") },
 ];
 
 export default function ForecastPage() {
@@ -78,7 +79,7 @@ export default function ForecastPage() {
     bankName: a.bankName,
     accountName: a.accountName,
     currencyCode: a.currencyCode,
-    note: a.overdraftLimit > 0 ? `OD limit ${a.overdraftLimit.toLocaleString()}` : undefined,
+    note: a.overdraftLimit > 0 ? t("OD limit {amount}", { amount: a.overdraftLimit.toLocaleString() }) : undefined,
     cells: a.days.map((d) => d[metric]),
   }));
   const matrixTotals = Array.from(new Set((detail?.accounts ?? []).map((a) => a.currencyCode))).map((code) => ({
@@ -87,40 +88,40 @@ export default function ForecastPage() {
   }));
 
   const columns: Column<ForecastEntry>[] = [
-    { key: "forecastDate", header: "Date", sortable: false, render: (r) => formatDate(r.forecastDate) },
-    { key: "description", header: "Description", render: (r) => <span className="text-ink">{r.description || r.sourceReference || "—"}</span> },
-    { key: "accountName", header: "Account", render: (r) => <span className="text-ink-secondary">{r.accountName}</span> },
-    { key: "category", header: "Category", render: (r) => <Badge tone={r.category === "INFLOW" ? "good" : "critical"}>{r.category === "INFLOW" ? "Inflow" : "Outflow"}</Badge> },
-    { key: "amount", header: "Amount", align: "right", render: (r) => <span className="tabular-nums font-medium">{formatMoney(r.amount, r.currencyCode)}</span> },
-    { key: "confidence", header: "Confidence", render: (r) => <Badge tone={confidenceTone[r.confidence]}>{r.confidence}</Badge> },
-    { key: "sourceType", header: "Source", render: (r) => <span className="text-xs text-ink-muted">{r.sourceType === "MANUAL" ? "Manual" : r.sourceType}</span> },
+    { key: "forecastDate", header: t("Date"), sortable: false, render: (r) => formatDate(r.forecastDate) },
+    { key: "description", header: t("Description"), render: (r) => <span className="text-ink">{r.description || r.sourceReference || "—"}</span> },
+    { key: "accountName", header: t("Account"), render: (r) => <span className="text-ink-secondary">{r.accountName}</span> },
+    { key: "category", header: t("Category"), render: (r) => <Badge tone={r.category === "INFLOW" ? "good" : "critical"}>{r.category === "INFLOW" ? t("Inflow") : t("Outflow")}</Badge> },
+    { key: "amount", header: t("Amount"), align: "right", render: (r) => <span className="tabular-nums font-medium">{formatMoney(r.amount, r.currencyCode)}</span> },
+    { key: "confidence", header: t("Confidence"), render: (r) => <Badge tone={confidenceTone[r.confidence]}>{t(r.confidence[0] + r.confidence.slice(1).toLowerCase())}</Badge> },
+    { key: "sourceType", header: t("Source"), render: (r) => <span className="text-xs text-ink-muted">{r.sourceType === "MANUAL" ? t("Manual") : tEnum(r.sourceType)}</span> },
   ];
 
   return (
     <>
       <PageHeader
-        title="Cash Forecast"
-        description="Day-by-day projection from today's available balance: AP due, expected collections (after float), transfers, banker acceptance maturities and manual entries."
+        title={t("Cash Forecast")}
+        description={t("Day-by-day projection from today's available balance: AP due, expected collections (after float), transfers, banker acceptance maturities and manual entries.")}
         actions={
           <>
-            <Select className="h-9 w-40" value={currency} onChange={(e) => setCurrency(e.target.value)} aria-label="Currency">
-              <option value="">All (in base currency)</option>
+            <Select className="h-9 w-40" value={currency} onChange={(e) => setCurrency(e.target.value)} aria-label={t("Currency")}>
+              <option value="">{t("All (in base currency)")}</option>
               {currencies?.map((c) => (
                 <option key={c.code} value={c.code}>
-                  {c.code} only
+                  {t("{code} only", { code: c.code })}
                 </option>
               ))}
             </Select>
-            <Select className="h-9 w-32" value={horizon} onChange={(e) => setHorizon(Number(e.target.value))} aria-label="Horizon">
+            <Select className="h-9 w-32" value={horizon} onChange={(e) => setHorizon(Number(e.target.value))} aria-label={t("Horizon")}>
               {HORIZONS.map((h) => (
                 <option key={h.days} value={h.days}>
-                  {h.label}
+                  {t(h.label)}
                 </option>
               ))}
             </Select>
             {canManage && (
               <Button onClick={() => setCreateOpen(true)}>
-                <Plus className="h-4 w-4" /> Add Entry
+                <Plus className="h-4 w-4" /> {t("Add Entry")}
               </Button>
             )}
           </>
@@ -136,26 +137,26 @@ export default function ForecastPage() {
       {detail && detail.unconvertedCurrencies.length > 0 && (
         <Notice tone="warning">
           {detail.fxConversion
-            ? `No exchange rate available for ${detail.unconvertedCurrencies.join(", ")} right now, so those accounts are left out of the ${detail.baseCurrency} totals.`
-            : `The totals cover ${detail.baseCurrency} accounts only; totals converted across currencies are part of the Pro+ plan.`}{" "}
-          Pick a single currency above to see {detail.unconvertedCurrencies.join(", ")} on their own.
+            ? t("No exchange rate available for {currencies} right now, so those accounts are left out of the {base} totals.", { currencies: detail.unconvertedCurrencies.join(", "), base: detail.baseCurrency })
+            : t("The totals cover {base} accounts only; totals converted across currencies are part of the Pro+ plan.", { base: detail.baseCurrency })}{" "}
+          {t("Pick a single currency above to see {currencies} on their own.", { currencies: detail.unconvertedCurrencies.join(", ") })}
         </Notice>
       )}
       {detail && detail.overdue.payables.length > 0 && (
         <Notice tone="warning">
-          Overdue payables counted as going out today: {detail.overdue.payables.map((o) => `${formatMoney(o.amount, o.currencyCode)} (${o.count})`).join(", ")}. Adjust the due date on any that are not actually due.
+          {t("Overdue payables counted as going out today: {list}. Adjust the due date on any that are not actually due.", { list: detail.overdue.payables.map((o) => `${formatMoney(o.amount, o.currencyCode)} (${o.count})`).join(", ") })}
         </Notice>
       )}
       {detail && detail.overdue.receivables.length > 0 && (
         <Notice tone="info">
-          Overdue collections not counted (not yet received): {detail.overdue.receivables.map((o) => `${formatMoney(o.amount, o.currencyCode)} (${o.count})`).join(", ")}. Reschedule or mark them received to bring them into the projection.
+          {t("Overdue collections not counted (not yet received): {list}. Reschedule or mark them received to bring them into the projection.", { list: detail.overdue.receivables.map((o) => `${formatMoney(o.amount, o.currencyCode)} (${o.count})`).join(", ") })}
         </Notice>
       )}
       {(firstShortfallDay || firstOverdraftDay) && (
         <Notice tone="critical">
           {firstShortfallDay
-            ? `${firstShortfallDay.shortfallAccounts.join(", ")} would fall below minimum balance even after using overdraft, from ${formatDate(firstShortfallDay.date)}.`
-            : `${firstOverdraftDay!.overdraftAccounts.join(", ")} would be drawing on overdraft from ${formatDate(firstOverdraftDay!.date)}.`}
+            ? t("{accounts} would fall below minimum balance even after using overdraft, from {date}.", { accounts: firstShortfallDay.shortfallAccounts.join(", "), date: formatDate(firstShortfallDay.date) })
+            : t("{accounts} would be drawing on overdraft from {date}.", { accounts: firstOverdraftDay!.overdraftAccounts.join(", "), date: formatDate(firstOverdraftDay!.date) })}
         </Notice>
       )}
 
@@ -164,15 +165,15 @@ export default function ForecastPage() {
           Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)
         ) : (
           <>
-            <StatCard label="Expected Inflows" value={totalInflow} format={money} icon={TrendingUp} footer={<span className="text-xs text-ink-muted">excludes transfers between your own accounts</span>} />
-            <StatCard label="Expected Outflows" value={totalOutflow} format={money} icon={TrendingDown} />
-            <StatCard label={`Projected Available (${horizon}d)`} value={endBalance} format={money} tone={endBalance < 0 ? "critical" : "default"} footer={hasOverdraftFacilities && <span className="text-xs text-ink-muted">{money(projection[projection.length - 1]?.projectedLiquidity ?? 0)} incl. overdraft</span>} />
+            <StatCard label={t("Expected Inflows")} value={totalInflow} format={money} icon={TrendingUp} footer={<span className="text-xs text-ink-muted">{t("excludes transfers between your own accounts")}</span>} />
+            <StatCard label={t("Expected Outflows")} value={totalOutflow} format={money} icon={TrendingDown} />
+            <StatCard label={t("Projected Available ({n}d)", { n: horizon })} value={endBalance} format={money} tone={endBalance < 0 ? "critical" : "default"} footer={hasOverdraftFacilities && <span className="text-xs text-ink-muted">{money(projection[projection.length - 1]?.projectedLiquidity ?? 0)} {t("incl. overdraft")}</span>} />
             <StatCard
-              label="Lowest Projected Point"
+              label={t("Lowest Projected Point")}
               value={worstDay?.projectedBalance ?? 0}
               format={money}
               tone={worstDay && worstDay.projectedBalance < 0 ? "critical" : "default"}
-              footer={worstDay && <span className="text-xs text-ink-muted">on {formatDate(worstDay.date)}</span>}
+              footer={worstDay && <span className="text-xs text-ink-muted">{t("on {date}", { date: formatDate(worstDay.date) })}</span>}
             />
           </>
         )}
@@ -180,27 +181,27 @@ export default function ForecastPage() {
 
       <Card className="mt-4">
         <CardHeader>
-          <CardTitle>Projected Balance{detail ? ` (${detail.baseCurrency})` : ""}</CardTitle>
+          <CardTitle>{detail ? t("Projected Balance ({base})", { base: detail.baseCurrency }) : t("Projected Balance")}</CardTitle>
         </CardHeader>
         <CardBody>
-          {projectionLoading || !projection ? <Skeleton className="h-[300px] w-full" /> : projection.length === 0 ? <EmptyState title="No forecast data" /> : <ForecastChart data={projection} currency={detail?.baseCurrency} showLiquidity={hasOverdraftFacilities} />}
+          {projectionLoading || !projection ? <Skeleton className="h-[300px] w-full" /> : projection.length === 0 ? <EmptyState title={t("No forecast data")} /> : <ForecastChart data={projection} currency={detail?.baseCurrency} showLiquidity={hasOverdraftFacilities} />}
         </CardBody>
       </Card>
 
       <Card className="mt-4">
         <CardHeader>
-          <CardTitle>By Bank &amp; Account</CardTitle>
+          <CardTitle>{t("By Bank & Account")}</CardTitle>
           <Tabs tabs={METRIC_TABS} active={metric} onChange={(k) => setMetric(k as Metric)} />
         </CardHeader>
         {projectionLoading || !detail ? (
           <SkeletonTable cols={8} />
         ) : detail.accounts.length === 0 ? (
-          <EmptyState title="No accounts to project" />
+          <EmptyState title={t("No accounts to project")} />
         ) : (
           <>
             <BalanceMatrix columns={matrixColumns} rows={matrixRows} totals={matrixTotals} />
             <p className="border-t border-border px-5 py-3 text-xs text-ink-muted">
-              Available = book balance − reserved amount − cheque float not yet cleared. A payment reduces the balance on its due date; a collection with float only becomes available once it clears. Each currency is totalled separately.
+              {t("Available = book balance − reserved amount − cheque float not yet cleared. A payment reduces the balance on its due date; a collection with float only becomes available once it clears. Each currency is totalled separately.")}
             </p>
           </>
         )}
@@ -208,14 +209,14 @@ export default function ForecastPage() {
 
       <Card className="mt-4">
         <CardHeader>
-          <CardTitle>Forecast Line Items</CardTitle>
+          <CardTitle>{t("Forecast Line Items")}</CardTitle>
         </CardHeader>
         {entriesLoading ? (
           <SkeletonTable cols={7} />
         ) : isError ? (
           <ErrorState message={(error as Error)?.message} onRetry={refetch} />
         ) : !entries || entries.length === 0 ? (
-          <EmptyState title="No forecast line items in this window" />
+          <EmptyState title={t("No forecast line items in this window")} />
         ) : (
           <DataTable columns={columns} rows={entries} rowKey={(r) => r.id} />
         )}

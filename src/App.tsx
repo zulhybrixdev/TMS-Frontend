@@ -4,6 +4,7 @@ import { AppShell } from "./components/layout/AppShell";
 import { EnvironmentBadge } from "./components/layout/EnvironmentBadge";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { PlanGate } from "./components/PlanGate";
+import { MaintenanceGate } from "./components/MaintenanceGate";
 import { PERMISSIONS } from "./lib/permissions";
 
 import LoginPage from "./pages/LoginPage";
@@ -16,6 +17,8 @@ import BankAccountsPage from "./pages/BankAccountsPage";
 import CashPositionPage from "./pages/CashPositionPage";
 import TreasuryDeskPage from "./pages/TreasuryDeskPage";
 import BankerAcceptancesPage from "./pages/BankerAcceptancesPage";
+import HelpPage from "./pages/HelpPage";
+import LegalPage from "./pages/LegalPage";
 import PaymentsPage from "./pages/PaymentsPage";
 import PaymentDetailPage from "./pages/PaymentDetailPage";
 import BeneficiariesPage from "./pages/BeneficiariesPage";
@@ -28,6 +31,7 @@ import ForecastPage from "./pages/ForecastPage";
 import ReportsPage from "./pages/ReportsPage";
 import AdministrationPage from "./pages/administration/AdministrationPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import { t } from "./i18n";
 
 // Client-facing POC builds ship with VITE_ENABLE_PLATFORM unset, so this
 // condition is statically false and Rollup drops the import() (and every
@@ -48,8 +52,11 @@ export default function App() {
   return (
     <>
       <EnvironmentBadge />
+      <MaintenanceGate />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/terms" element={<LegalPage kind="terms" />} />
+        <Route path="/privacy" element={<LegalPage kind="privacy" />} />
         <Route path="/sso-callback" element={<SsoCallbackPage />} />
       <Route path="/impersonate-entry" element={<ImpersonationEntryPage />} />
 
@@ -99,11 +106,12 @@ export default function App() {
         <Route element={<AppShell />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/account" element={<AccountPage />} />
+          <Route path="/help" element={<HelpPage />} />
 
           <Route
             path="/executive-dashboard"
             element={
-              <PlanGate module="advanced_insights" feature="Executive Dashboard">
+              <PlanGate module="advanced_insights" feature={t("Executive Dashboard")}>
                 <ExecutiveDashboardPage />
               </PlanGate>
             }
@@ -121,7 +129,7 @@ export default function App() {
             <Route
               path="/treasury-desk"
               element={
-                <PlanGate module="treasury_desk" feature="Daily Cash Desk">
+                <PlanGate module="treasury_desk" feature={t("Daily Cash Desk")}>
                   <TreasuryDeskPage />
                 </PlanGate>
               }
@@ -129,7 +137,7 @@ export default function App() {
             <Route
               path="/banker-acceptances"
               element={
-                <PlanGate module="treasury_desk" feature="Banker Acceptances">
+                <PlanGate module="treasury_desk" feature={t("Banker Acceptances")}>
                   <BankerAcceptancesPage />
                 </PlanGate>
               }
@@ -145,7 +153,7 @@ export default function App() {
             <Route
               path="/beneficiaries"
               element={
-                <PlanGate module="beneficiaries" feature="Beneficiaries & Payment Templates">
+                <PlanGate module="beneficiaries" feature={t("Beneficiaries & Payment Templates")}>
                   <BeneficiariesPage />
                 </PlanGate>
               }
@@ -156,7 +164,7 @@ export default function App() {
             <Route
               path="/incoming"
               element={
-                <PlanGate module="incoming" feature="Incoming Transactions">
+                <PlanGate module="incoming" feature={t("Incoming Transactions")}>
                   <IncomingPage />
                 </PlanGate>
               }
@@ -167,7 +175,7 @@ export default function App() {
             <Route
               path="/transfers"
               element={
-                <PlanGate module="transfers" feature="Inter-Bank Transfers">
+                <PlanGate module="transfers" feature={t("Inter-Bank Transfers")}>
                   <TransfersPage />
                 </PlanGate>
               }
@@ -183,7 +191,7 @@ export default function App() {
             <Route
               path="/forecast"
               element={
-                <PlanGate module="forecast" feature="Cash Forecast">
+                <PlanGate module="forecast" feature={t("Cash Forecast")}>
                   <ForecastPage />
                 </PlanGate>
               }
@@ -194,7 +202,7 @@ export default function App() {
             <Route
               path="/reports"
               element={
-                <PlanGate module="reports_export" feature="Reports">
+                <PlanGate module="reports_export" feature={t("Reports")}>
                   <ReportsPage />
                 </PlanGate>
               }
@@ -205,7 +213,7 @@ export default function App() {
             <Route
               path="/audit-trail"
               element={
-                <PlanGate module="audit" feature="Audit Trail">
+                <PlanGate module="audit" feature={t("Audit Trail")}>
                   <AuditTrailPage />
                 </PlanGate>
               }

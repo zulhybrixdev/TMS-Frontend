@@ -6,6 +6,7 @@ import { api } from "../../lib/api-client";
 import { Card, CardBody } from "../ui/Card";
 import { useAuth } from "../../lib/auth-context";
 import { PERMISSIONS } from "../../lib/permissions";
+import { t } from "../../i18n";
 
 interface OnboardingStatus {
   hasBankAccount: boolean;
@@ -28,17 +29,17 @@ export function OnboardingChecklist() {
   if (isLoading || !data) return null;
 
   const steps = [
-    { key: "hasBankAccount", label: "Add your first bank account", to: "/bank-accounts", icon: Landmark, done: data.hasBankAccount, visible: hasPermission(PERMISSIONS.ACCOUNTS_MANAGE) },
-    { key: "hasTeam", label: "Invite your team", to: "/administration", icon: Users, done: data.hasTeam, visible: hasPermission(PERMISSIONS.USERS_MANAGE) },
+    { key: "hasBankAccount", label: t("Add your first bank account"), to: "/bank-accounts", icon: Landmark, done: data.hasBankAccount, visible: hasPermission(PERMISSIONS.ACCOUNTS_MANAGE) },
+    { key: "hasTeam", label: t("Invite your team"), to: "/administration", icon: Users, done: data.hasTeam, visible: hasPermission(PERMISSIONS.USERS_MANAGE) },
     {
       key: "hasApprovalRule",
-      label: "Set an approval rule",
+      label: t("Set an approval rule"),
       to: "/administration?tab=approval-rules",
       icon: ShieldCheck,
       done: data.hasApprovalRule,
       visible: hasPermission(PERMISSIONS.APPROVAL_RULES_MANAGE),
     },
-    { key: "hasPayment", label: "Create your first payment", to: "/payments", icon: ArrowUpRight, done: data.hasPayment, visible: hasPermission(PERMISSIONS.PAYMENTS_CREATE) },
+    { key: "hasPayment", label: t("Create your first payment"), to: "/payments", icon: ArrowUpRight, done: data.hasPayment, visible: hasPermission(PERMISSIONS.PAYMENTS_CREATE) },
   ].filter((s) => s.visible);
 
   if (steps.length === 0 || steps.every((s) => s.done)) return null;
@@ -49,7 +50,7 @@ export function OnboardingChecklist() {
     <Card className="mb-5 border-brand/20 bg-brand-soft/30">
       <CardBody className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <p className="text-[13.5px] font-semibold text-ink">Get set up ({doneCount}/{steps.length})</p>
+          <p className="text-[13.5px] font-semibold text-ink">{t("Get set up ({done}/{total})", { done: doneCount, total: steps.length })}</p>
           <div className="h-1.5 w-28 overflow-hidden rounded-full bg-surface-raised">
             <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${(doneCount / steps.length) * 100}%` }} />
           </div>

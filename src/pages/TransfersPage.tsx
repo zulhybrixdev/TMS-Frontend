@@ -18,6 +18,8 @@ import { api } from "../lib/api-client";
 import { formatDate, formatMoney } from "../lib/format";
 import type { Transfer, TransferRecommendation } from "../lib/types";
 import { TransferFormDialog } from "../components/transfers/TransferFormDialog";
+import { t, tEnum } from "../i18n";
+import { tServer } from "../i18n/server-messages";
 
 const STATUSES = ["DRAFT", "PENDING_APPROVAL", "APPROVED", "REJECTED", "COMPLETED", "CANCELLED"];
 
@@ -37,20 +39,20 @@ export default function TransfersPage() {
   });
 
   const columns: Column<Transfer>[] = [
-    { key: "transferNumber", header: "Transfer #", render: (r) => <span className="font-medium text-ink">{r.transferNumber}</span> },
-    { key: "sourceAccountName", header: "From", render: (r) => <span className="text-ink-secondary">{r.sourceAccountName}</span> },
-    { key: "destinationAccountName", header: "To", render: (r) => <span className="text-ink-secondary">{r.destinationAccountName}</span> },
-    { key: "amount", header: "Amount", sortable: true, align: "right", render: (r) => <span className="tabular-nums font-medium">{formatMoney(r.amount, r.currencyCode)}</span> },
-    { key: "transferDate", header: "Date", sortable: true, render: (r) => formatDate(r.transferDate) },
-    { key: "status", header: "Status", render: (r) => <StatusBadge status={r.status} /> },
-    { key: "isSystemRecommended", header: "Source", render: (r) => (r.isSystemRecommended ? <Badge tone="brand">System recommended</Badge> : <span className="text-xs text-ink-muted">Manual</span>) },
+    { key: "transferNumber", header: t("Transfer #"), render: (r) => <span className="font-medium text-ink">{r.transferNumber}</span> },
+    { key: "sourceAccountName", header: t("From"), render: (r) => <span className="text-ink-secondary">{r.sourceAccountName}</span> },
+    { key: "destinationAccountName", header: t("To"), render: (r) => <span className="text-ink-secondary">{r.destinationAccountName}</span> },
+    { key: "amount", header: t("Amount"), sortable: true, align: "right", render: (r) => <span className="tabular-nums font-medium">{formatMoney(r.amount, r.currencyCode)}</span> },
+    { key: "transferDate", header: t("Date"), sortable: true, render: (r) => formatDate(r.transferDate) },
+    { key: "status", header: t("Status"), render: (r) => <StatusBadge status={r.status} /> },
+    { key: "isSystemRecommended", header: t("Source"), render: (r) => (r.isSystemRecommended ? <Badge tone="brand">{t("System recommended")}</Badge> : <span className="text-xs text-ink-muted">{t("Manual")}</span>) },
   ];
 
   return (
     <>
       <PageHeader
-        title="Inter-Bank Transfers"
-        description="Move funds between company accounts to cover shortfalls or sweep excess cash."
+        title={t("Inter-Bank Transfers")}
+        description={t("Move funds between company accounts to cover shortfalls or sweep excess cash.")}
         actions={
           canCreate && (
             <Button
@@ -59,7 +61,7 @@ export default function TransfersPage() {
                 setFormOpen(true);
               }}
             >
-              <Plus className="h-4 w-4" /> New Transfer
+              <Plus className="h-4 w-4" /> {t("New Transfer")}
             </Button>
           )
         }
@@ -69,14 +71,14 @@ export default function TransfersPage() {
         <Card className="mb-4">
           <CardHeader>
             <CardTitle className="flex items-center gap-1.5">
-              <Sparkles className="h-4 w-4 text-brand" /> Recommended Transfers
+              <Sparkles className="h-4 w-4 text-brand" /> {t("Recommended Transfers")}
             </CardTitle>
           </CardHeader>
           <CardBody className="p-0">
             {recLoading ? (
               <Skeleton className="m-5 h-16" />
             ) : !recommendations || recommendations.length === 0 ? (
-              <EmptyState title="No transfers recommended right now" description="Every account is currently within its configured minimum balance." />
+              <EmptyState title={t("No transfers recommended right now")} description={t("Every account is currently within its configured minimum balance.")} />
             ) : (
               <div className="divide-y divide-border">
                 {recommendations.map((rec, i) => (
@@ -85,7 +87,7 @@ export default function TransfersPage() {
                       <p className="text-[13px] font-medium text-ink">
                         {rec.sourceAccountName} <ArrowLeftRight className="mx-1 inline h-3 w-3 text-ink-muted" /> {rec.destinationAccountName}
                       </p>
-                      <p className="mt-0.5 text-[12px] text-ink-secondary">{rec.reason}</p>
+                      <p className="mt-0.5 text-[12px] text-ink-secondary">{tServer(rec.reason)}</p>
                     </div>
                     <div className="flex shrink-0 items-center gap-3">
                       <p className="text-[14px] font-semibold tabular-nums text-ink">{formatMoney(rec.amount, rec.currencyCode)}</p>
@@ -97,7 +99,7 @@ export default function TransfersPage() {
                           setFormOpen(true);
                         }}
                       >
-                        Review & Create
+                        {t("Review & Create")}
                       </Button>
                     </div>
                   </div>
@@ -112,13 +114,13 @@ export default function TransfersPage() {
         <Toolbar
           search={list.search}
           onSearch={list.setSearch}
-          placeholder="Search transfer #..."
+          placeholder={t("Search transfer #...")}
           filters={
             <Select className="h-9 w-44" value={list.filters.status ?? ""} onChange={(e) => list.setFilter("status", e.target.value)}>
-              <option value="">All statuses</option>
+              <option value="">{t("All statuses")}</option>
               {STATUSES.map((s) => (
                 <option key={s} value={s}>
-                  {s.replace(/_/g, " ")}
+                  {tEnum(s) !== s ? tEnum(s) : s.replace(/_/g, " ")}
                 </option>
               ))}
             </Select>
@@ -130,7 +132,7 @@ export default function TransfersPage() {
         ) : list.isError ? (
           <ErrorState message={(list.error as Error)?.message} onRetry={list.refetch} />
         ) : list.data.length === 0 ? (
-          <EmptyState icon={<ArrowLeftRight className="h-5 w-5" />} title="No transfers found" />
+          <EmptyState icon={<ArrowLeftRight className="h-5 w-5" />} title={t("No transfers found")} />
         ) : (
           <DataTable columns={columns} rows={list.data} rowKey={(r) => r.id} sortBy={list.sortBy} sortDir={list.sortDir} onSort={list.toggleSort} onRowClick={(r) => navigate(`/transfers/${r.id}`)} />
         )}

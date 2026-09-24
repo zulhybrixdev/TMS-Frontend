@@ -15,6 +15,8 @@ import { PERMISSIONS } from "../lib/permissions";
 import { formatDate, formatMoney } from "../lib/format";
 import type { ApprovalRequestSummary, Paginated } from "../lib/types";
 import { ApprovalActionDialog } from "../components/approvals/ApprovalActionDialog";
+import { t } from "../i18n";
+import { tServer } from "../i18n/server-messages";
 
 type TabKey = "pending" | "mine" | "all";
 
@@ -43,25 +45,25 @@ export default function ApprovalCenterPage() {
   const columns: Column<ApprovalRequestSummary>[] = [
     {
       key: "label",
-      header: "Request",
+      header: t("Request"),
       render: (r) => (
         <div>
-          <p className="font-medium text-ink">{r.label}</p>
-          <p className="text-xs text-ink-muted">{r.entityType === "PAYMENT" ? "Payment" : "Transfer"}</p>
+          <p className="font-medium text-ink">{tServer(r.label)}</p>
+          <p className="text-xs text-ink-muted">{r.entityType === "PAYMENT" ? t("Payment") : t("Transfer")}</p>
         </div>
       ),
     },
-    { key: "amount", header: "Amount", align: "right", render: (r) => <span className="tabular-nums font-medium">{formatMoney(r.amount, r.currencyCode)}</span> },
-    { key: "level", header: "Level", render: (r) => <Badge tone="neutral">{r.currentLevel} / {r.requiredLevels}</Badge> },
-    { key: "createdAt", header: "Submitted", render: (r) => formatDate(r.createdAt) },
-    { key: "status", header: "Status", render: (r) => <StatusBadge status={r.status} /> },
+    { key: "amount", header: t("Amount"), align: "right", render: (r) => <span className="tabular-nums font-medium">{formatMoney(r.amount, r.currencyCode)}</span> },
+    { key: "level", header: t("Level"), render: (r) => <Badge tone="neutral">{r.currentLevel} / {r.requiredLevels}</Badge> },
+    { key: "createdAt", header: t("Submitted"), render: (r) => formatDate(r.createdAt) },
+    { key: "status", header: t("Status"), render: (r) => <StatusBadge status={r.status} /> },
     {
       key: "actions",
       header: "",
       align: "right",
       render: (r) => (
         <Button size="sm" variant={tab === "pending" ? "primary" : "outline"} onClick={() => setSelected(r)}>
-          {tab === "pending" ? "Review" : "View"}
+          {tab === "pending" ? t("Review") : t("View")}
         </Button>
       ),
     },
@@ -69,14 +71,14 @@ export default function ApprovalCenterPage() {
 
   return (
     <>
-      <PageHeader title="Approval Center" description="Review and act on pending payment and transfer requests." />
+      <PageHeader title={t("Approval Center")} description={t("Review and act on pending payment and transfer requests.")} />
 
       <Card>
         <Tabs
           tabs={[
-            ...(canAct ? [{ key: "pending", label: "Pending My Action", count: tab === "pending" ? data?.meta.total : undefined }] : []),
-            { key: "mine", label: "My Requests" },
-            { key: "all", label: "All Requests" },
+            ...(canAct ? [{ key: "pending", label: t("Pending My Action"), count: tab === "pending" ? data?.meta.total : undefined }] : []),
+            { key: "mine", label: t("My Requests") },
+            { key: "all", label: t("All Requests") },
           ]}
           active={tab}
           onChange={(k) => setTab(k as TabKey)}
@@ -87,7 +89,7 @@ export default function ApprovalCenterPage() {
         ) : isError ? (
           <ErrorState message={(error as Error)?.message} onRetry={refetch} />
         ) : !data || data.items.length === 0 ? (
-          <EmptyState icon={<ClipboardCheck className="h-5 w-5" />} title="Nothing here" description={tab === "pending" ? "You're all caught up — no approvals waiting on you." : "No requests found."} />
+          <EmptyState icon={<ClipboardCheck className="h-5 w-5" />} title={t("Nothing here")} description={tab === "pending" ? t("You're all caught up — no approvals waiting on you.") : t("No requests found.")} />
         ) : (
           <DataTable columns={columns} rows={data.items} rowKey={(r) => r.id} onRowClick={setSelected} />
         )}

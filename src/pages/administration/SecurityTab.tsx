@@ -12,12 +12,13 @@ import { Input, Label } from "../../components/ui/Input";
 import { Badge } from "../../components/ui/Badge";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { ConfirmDialog } from "../../components/ui/Dialog";
+import { t } from "../../i18n";
 
 export function SecurityTab() {
   return (
     <div className="space-y-8">
       <MfaPolicySection />
-      <PlanGate module="sso" feature="Single Sign-On (SSO)">
+      <PlanGate module="sso" feature={t("Single Sign-On (SSO)")}>
         <SsoSection />
       </PlanGate>
     </div>
@@ -34,10 +35,10 @@ function MfaPolicySection() {
     setSaving(true);
     try {
       await api.put("/security-policy", { mfaRequired });
-      toast.success(mfaRequired ? "Two-factor authentication is now required" : "Two-factor authentication is no longer required");
+      toast.success(mfaRequired ? t("Two-factor authentication is now required") : t("Two-factor authentication is no longer required"));
       qc.invalidateQueries({ queryKey: ["security-policy"] });
     } catch (err) {
-      toast.error("Could not update the policy", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Could not update the policy"), { description: err instanceof ApiError ? err.message : undefined });
     } finally {
       setSaving(false);
       setConfirmOn(false);
@@ -50,24 +51,22 @@ function MfaPolicySection() {
   return (
     <section className="space-y-3">
       <div className="flex items-center gap-2">
-        <h3 className="font-display text-[15px] font-semibold text-ink">Two-factor authentication</h3>
-        {policy.mfaRequired ? <Badge tone="good" dot>Required</Badge> : <Badge tone="neutral">Optional</Badge>}
+        <h3 className="font-display text-[15px] font-semibold text-ink">{t("Two-factor authentication")}</h3>
+        {policy.mfaRequired ? <Badge tone="good" dot>{t("Required")}</Badge> : <Badge tone="neutral">{t("Optional")}</Badge>}
       </div>
       <p className="text-[13px] text-ink-secondary">
-        Require everyone to sign in with a code from an authenticator app as well as their password. Anyone who hasn't set it up is walked through it at
-        their next password sign-in, and can't turn it off afterwards. People signed in through SSO are exempt - your identity provider is responsible
-        for their MFA. Off by default.
+        {t("Require everyone to sign in with a code from an authenticator app as well as their password. Anyone who hasn't set it up is walked through it at their next password sign-in, and can't turn it off afterwards. People signed in through SSO are exempt - your identity provider is responsible for their MFA. Off by default.")}
       </p>
       <p className="text-[13px] text-ink-muted">
-        {policy.usersWithMfa} of {policy.totalUsers} active user{policy.totalUsers === 1 ? "" : "s"} have set it up.
+        {policy.totalUsers === 1 ? t("{done} of 1 active user has set it up.", { done: policy.usersWithMfa }) : t("{done} of {total} active users have set it up.", { done: policy.usersWithMfa, total: policy.totalUsers })}
       </p>
       {policy.mfaRequired ? (
         <Button variant="outline" size="sm" loading={saving} onClick={() => save(false)}>
-          Stop requiring two-factor authentication
+          {t("Stop requiring two-factor authentication")}
         </Button>
       ) : (
         <Button size="sm" onClick={() => setConfirmOn(true)}>
-          <ShieldCheck className="h-4 w-4" /> Require two-factor authentication
+          <ShieldCheck className="h-4 w-4" /> {t("Require two-factor authentication")}
         </Button>
       )}
       <ConfirmDialog
@@ -75,9 +74,9 @@ function MfaPolicySection() {
         onClose={() => setConfirmOn(false)}
         onConfirm={() => save(true)}
         loading={saving}
-        title="Require two-factor authentication?"
-        description={`${pending} active user${pending === 1 ? " hasn't" : "s haven't"} set it up yet and will be asked to at their next sign-in. People already signed in aren't interrupted.`}
-        confirmLabel="Require it"
+        title={t("Require two-factor authentication?")}
+        description={pending === 1 ? t("1 active user hasn't set it up yet and will be asked to at their next sign-in. People already signed in aren't interrupted.") : t("{n} active users haven't set it up yet and will be asked to at their next sign-in. People already signed in aren't interrupted.", { n: pending })}
+        confirmLabel={t("Require it")}
       />
     </section>
   );
@@ -118,10 +117,10 @@ function SsoSection() {
           .map((d) => d.trim())
           .filter(Boolean),
       });
-      toast.success("SSO configuration saved");
+      toast.success(t("SSO configuration saved"));
       qc.invalidateQueries({ queryKey: ["sso-config"] });
     } catch (err) {
-      toast.error("Could not save SSO configuration", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Could not save SSO configuration"), { description: err instanceof ApiError ? err.message : undefined });
     }
   });
 
@@ -134,22 +133,21 @@ function SsoSection() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-[13px] text-ink-secondary">
-            Let your team sign in through your own identity provider (Okta, Azure AD, Google Workspace, or any SAML/OIDC IdP) - brokered through
-            Keycloak, so this app never integrates with your IdP's protocol directly.
+            {t("Let your team sign in through your own identity provider (Okta, Azure AD, Google Workspace, or any SAML/OIDC IdP) - brokered through Keycloak, so this app never integrates with your IdP's protocol directly.")}
           </p>
           {config && (
             <p className="mt-2 flex items-center gap-2 text-[13px]">
               <Badge tone="good" dot>
-                Configured
+                {t("Configured")}
               </Badge>
-              <span className="text-ink-muted">Sign-in link: </span>
+              <span className="text-ink-muted">{t("Sign-in link:")} </span>
               <code className="rounded bg-plane px-1.5 py-0.5 text-[12px]">{ssoStartUrl}</code>
             </p>
           )}
         </div>
         {config && (
           <Button variant="outline" size="sm" onClick={() => setRemoveOpen(true)}>
-            <Trash2 className="h-3.5 w-3.5 text-status-critical" /> Remove
+            <Trash2 className="h-3.5 w-3.5 text-status-critical" /> {t("Remove")}
           </Button>
         )}
       </div>
@@ -157,31 +155,28 @@ function SsoSection() {
       <form onSubmit={onSubmit} className="max-w-lg space-y-4 rounded-lg border border-border p-4">
         <div>
           <Label htmlFor="keycloakIdpAlias" required>
-            Keycloak Identity Provider alias
+            {t("Keycloak Identity Provider alias")}
           </Label>
-          <Input id="keycloakIdpAlias" placeholder="e.g. acme-corp-saml" {...register("keycloakIdpAlias", { required: true })} />
+          <Input id="keycloakIdpAlias" placeholder={t("e.g. acme-corp-saml")} {...register("keycloakIdpAlias", { required: true })} />
           <p className="mt-1 text-[12px] text-ink-muted">
-            The alias of the Identity Provider registered for your organisation in Keycloak's <code>treasury-system</code> realm - your Keycloak
-            administrator sets this up when connecting your IdP.
+            {t("The alias of the Identity Provider registered for your organisation in Keycloak's")} <code>treasury-system</code> {t("realm - your Keycloak administrator sets this up when connecting your IdP.")}
           </p>
         </div>
 
         <div>
-          <Label htmlFor="allowedEmailDomains">Allowed email domains (optional)</Label>
-          <Input id="allowedEmailDomains" placeholder="e.g. acme.com, acme.com.my" {...register("allowedEmailDomains")} />
+          <Label htmlFor="allowedEmailDomains">{t("Allowed email domains (optional)")}</Label>
+          <Input id="allowedEmailDomains" placeholder={t("e.g. acme.com, acme.com.my")} {...register("allowedEmailDomains")} />
           <p className="mt-1 text-[12px] text-ink-muted">
-            Only these email domains can sign in (or be created) through SSO - a safeguard in case your identity provider is misconfigured. Leave blank
-            for no restriction. Sign-ins also require your IdP to have verified the email address.
+            {t("Only these email domains can sign in (or be created) through SSO - a safeguard in case your identity provider is misconfigured. Leave blank for no restriction. Sign-ins also require your IdP to have verified the email address.")}
           </p>
         </div>
 
         <label className="flex items-start gap-2.5 text-[13px]">
           <input type="checkbox" className="mt-0.5" {...register("autoProvisionUsers")} />
           <span>
-            <span className="font-medium text-ink">Automatically create accounts</span>
+            <span className="font-medium text-ink">{t("Automatically create accounts")}</span>
             <span className="block text-ink-muted">
-              When someone signs in via SSO for the first time, create their account automatically with Viewer access. If off, they must already have
-              an account (created by an admin) before they can sign in via SSO.
+              {t("When someone signs in via SSO for the first time, create their account automatically with Viewer access. If off, they must already have an account (created by an admin) before they can sign in via SSO.")}
             </span>
           </span>
         </label>
@@ -189,16 +184,15 @@ function SsoSection() {
         <label className="flex items-start gap-2.5 text-[13px]">
           <input type="checkbox" className="mt-0.5" {...register("ssoRequired")} />
           <span>
-            <span className="font-medium text-ink">Require SSO for everyone</span>
+            <span className="font-medium text-ink">{t("Require SSO for everyone")}</span>
             <span className="block text-ink-muted">
-              Blocks password sign-in for everyone except Admins, who keep it as a fallback. Off by default - turn this on only once SSO is confirmed
-              working, so nobody gets locked out.
+              {t("Blocks password sign-in for everyone except Admins, who keep it as a fallback. Off by default - turn this on only once SSO is confirmed working, so nobody gets locked out.")}
             </span>
           </span>
         </label>
 
         <Button type="submit" loading={isSubmitting}>
-          <ShieldCheck className="h-4 w-4" /> Save SSO Configuration
+          <ShieldCheck className="h-4 w-4" /> {t("Save SSO Configuration")}
         </Button>
       </form>
 
@@ -208,16 +202,16 @@ function SsoSection() {
         onConfirm={async () => {
           try {
             await api.delete("/sso-config");
-            toast.success("SSO configuration removed");
+            toast.success(t("SSO configuration removed"));
             qc.invalidateQueries({ queryKey: ["sso-config"] });
           } catch (err) {
-            toast.error("Could not remove SSO configuration", { description: err instanceof ApiError ? err.message : undefined });
+            toast.error(t("Could not remove SSO configuration"), { description: err instanceof ApiError ? err.message : undefined });
           } finally {
             setRemoveOpen(false);
           }
         }}
-        title="Remove SSO configuration?"
-        confirmLabel="Remove"
+        title={t("Remove SSO configuration?")}
+        confirmLabel={t("Remove")}
         tone="danger"
       />
     </div>

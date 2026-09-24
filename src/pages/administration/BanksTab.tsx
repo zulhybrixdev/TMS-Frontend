@@ -13,6 +13,7 @@ import { Button } from "../../components/ui/Button";
 import { Dialog } from "../../components/ui/Dialog";
 import { Input, Label, Select } from "../../components/ui/Input";
 import { Skeleton } from "../../components/ui/Skeleton";
+import { t } from "../../i18n";
 
 export function BanksTab() {
   const qc = useQueryClient();
@@ -23,11 +24,11 @@ export function BanksTab() {
   const filtered = banks?.filter((b) => b.name.toLowerCase().includes(search.toLowerCase()));
 
   const columns: Column<Bank>[] = [
-    { key: "name", header: "Bank Name", render: (b) => <span className="font-medium text-ink">{b.name}</span> },
-    { key: "swiftCode", header: "SWIFT Code", render: (b) => b.swiftCode ?? "—" },
-    { key: "country", header: "Country", render: (b) => b.country },
-    { key: "accounts", header: "Linked Accounts", align: "right", render: (b) => b._count?.accounts ?? 0 },
-    { key: "status", header: "Status", render: (b) => <StatusBadge status={b.status} /> },
+    { key: "name", header: t("Bank Name"), render: (b) => <span className="font-medium text-ink">{b.name}</span> },
+    { key: "swiftCode", header: t("SWIFT Code"), render: (b) => b.swiftCode ?? "—" },
+    { key: "country", header: t("Country"), render: (b) => b.country },
+    { key: "accounts", header: t("Linked Accounts"), align: "right", render: (b) => b._count?.accounts ?? 0 },
+    { key: "status", header: t("Status"), render: (b) => <StatusBadge status={b.status} /> },
   ];
 
   if (isLoading) return <Skeleton className="h-64 w-full" />;
@@ -37,15 +38,15 @@ export function BanksTab() {
       <Toolbar
         search={search}
         onSearch={setSearch}
-        placeholder="Search banks..."
+        placeholder={t("Search banks...")}
         actions={
           <Button onClick={() => setEditing("new")}>
-            <Plus className="h-4 w-4" /> Add Bank
+            <Plus className="h-4 w-4" /> {t("Add Bank")}
           </Button>
         }
       />
       {!filtered || filtered.length === 0 ? (
-        <EmptyState title="No banks found" />
+        <EmptyState title={t("No banks found")} />
       ) : (
         <DataTable columns={columns} rows={filtered} rowKey={(b) => b.id} onRowClick={setEditing} />
       )}
@@ -73,10 +74,10 @@ function BankFormDialog({ bank, onClose, onSaved }: { bank: Bank | null; onClose
     try {
       if (bank) await api.patch(`/banks/${bank.id}`, values);
       else await api.post("/banks", values);
-      toast.success("Bank saved");
+      toast.success(t("Bank saved"));
       onSaved();
     } catch (err) {
-      toast.error("Could not save bank", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Could not save bank"), { description: err instanceof ApiError ? err.message : undefined });
     }
   });
 
@@ -84,14 +85,14 @@ function BankFormDialog({ bank, onClose, onSaved }: { bank: Bank | null; onClose
     <Dialog
       open
       onClose={onClose}
-      title={bank ? "Edit Bank" : "Add Bank"}
+      title={bank ? t("Edit Bank") : t("Add Bank")}
       footer={
         <>
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button onClick={onSubmit} loading={isSubmitting}>
-            Save
+            {t("Save")}
           </Button>
         </>
       }
@@ -99,26 +100,26 @@ function BankFormDialog({ bank, onClose, onSaved }: { bank: Bank | null; onClose
       <form className="space-y-4" onSubmit={onSubmit}>
         <div>
           <Label htmlFor="name" required>
-            Bank Name
+            {t("Bank Name")}
           </Label>
           <Input id="name" {...register("name", { required: true })} />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label htmlFor="swiftCode">SWIFT Code</Label>
+            <Label htmlFor="swiftCode">{t("SWIFT Code")}</Label>
             <Input id="swiftCode" {...register("swiftCode")} />
           </div>
           <div>
-            <Label htmlFor="country">Country</Label>
+            <Label htmlFor="country">{t("Country")}</Label>
             <Input id="country" {...register("country")} />
           </div>
         </div>
         {bank && (
           <div>
-            <Label htmlFor="status">Status</Label>
+            <Label htmlFor="status">{t("Status")}</Label>
             <Select id="status" {...register("status")}>
-              <option value="ACTIVE">Active</option>
-              <option value="INACTIVE">Inactive</option>
+              <option value="ACTIVE">{t("Active")}</option>
+              <option value="INACTIVE">{t("Inactive")}</option>
             </Select>
           </div>
         )}

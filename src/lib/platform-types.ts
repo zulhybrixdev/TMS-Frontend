@@ -63,3 +63,10 @@ export interface TenantSsoInfo {
   providers: KeycloakIdentityProvider[];
   suggestedAlias: string;
 }
+
+// GET /api/platform/config on one environment.
+export interface PlatformConfig {
+  pocMode: boolean;
+  /** Self-service registration open (true) or closed (false) on that environment. */
+  registrationEnabled: boolean;
+}

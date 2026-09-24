@@ -17,6 +17,7 @@ import { useAuth } from "../lib/auth-context";
 import { PERMISSIONS } from "../lib/permissions";
 import { formatDate, formatMoney, formatNumber, todayLocal } from "../lib/format";
 import type { BalanceGrid, DailyAccountRow, DailyCurrencyTotals, DailyDesk } from "../lib/types";
+import { t } from "../i18n";
 
 // Signed-amount cell: blank dash for zero so a busy day's few movements stand
 // out, red for negative balances.
@@ -50,7 +51,7 @@ export default function TreasuryDeskPage() {
   if (isError) {
     return (
       <>
-        <PageHeader title="Daily Cash Desk" description="Balances, overdraft, float and today's movements for every bank account." />
+        <PageHeader title={t("Daily Cash Desk")} description={t("Balances, overdraft, float and today's movements for every bank account.")} />
         <Card>
           <ErrorState message={(error as Error)?.message} onRetry={() => refetch()} />
         </Card>
@@ -64,12 +65,12 @@ export default function TreasuryDeskPage() {
   return (
     <>
       <PageHeader
-        title="Daily Cash Desk"
-        description="Where cash stands across every bank and currency: balances, overdraft, float, the day's movements, and what is scheduled."
+        title={t("Daily Cash Desk")}
+        description={t("Where cash stands across every bank and currency: balances, overdraft, float, the day's movements, and what is scheduled.")}
         actions={
           <div className="flex items-center gap-2">
             <label htmlFor="desk-date" className="text-[13px] text-ink-secondary">
-              Date
+              {t("Date")}
             </label>
             <Input id="desk-date" type="date" max={today} value={date} onChange={(e) => e.target.value && setDate(e.target.value)} className="h-9 w-40" />
           </div>
@@ -78,13 +79,13 @@ export default function TreasuryDeskPage() {
 
       {!isToday && (
         <div className="mb-4 rounded-lg border border-border bg-plane px-4 py-2.5 text-[13px] text-ink-secondary">
-          Showing {formatDate(date)} from the daily balance history. Float, reserved and available figures are live-only and are shown for today.
+          {t("Showing {date} from the daily balance history. Float, reserved and available figures are live-only and are shown for today.", { date: formatDate(date) })}
         </div>
       )}
       {overOD.length > 0 && (
         <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-status-critical/30 bg-status-critical-soft px-4 py-3 text-[13px] text-status-critical">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-          <p>{overOD.map((a) => a.accountName).join(", ")} {overOD.length > 1 ? "are" : "is"} overdrawn beyond the recorded overdraft limit.</p>
+          <p>{overOD.length > 1 ? t("{accounts} are overdrawn beyond the recorded overdraft limit.", { accounts: overOD.map((a) => a.accountName).join(", ") }) : t("{accounts} is overdrawn beyond the recorded overdraft limit.", { accounts: overOD.map((a) => a.accountName).join(", ") })}</p>
         </div>
       )}
 
@@ -92,21 +93,21 @@ export default function TreasuryDeskPage() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {isLoading || !data
           ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)
-          : data.totalsByCurrency.map((t) => <CurrencySummary key={t.currencyCode} t={t} isToday={isToday} />)}
+          : data.totalsByCurrency.map((tot) => <CurrencySummary key={tot.currencyCode} tot={tot} isToday={isToday} />)}
       </div>
 
       {/* Bank balances & liquidity */}
       <Card className="mt-4">
         <CardHeader>
-          <CardTitle>Bank Balances, Overdraft &amp; Float</CardTitle>
+          <CardTitle>{t("Bank Balances, Overdraft & Float")}</CardTitle>
         </CardHeader>
-        {isLoading || !data ? <SkeletonTable cols={9} /> : data.accounts.length === 0 ? <EmptyState title="No bank accounts yet" /> : <BalancesTable rows={data.accounts} totals={data.totalsByCurrency} isToday={isToday} />}
+        {isLoading || !data ? <SkeletonTable cols={9} /> : data.accounts.length === 0 ? <EmptyState title={t("No bank accounts yet")} /> : <BalancesTable rows={data.accounts} totals={data.totalsByCurrency} isToday={isToday} />}
       </Card>
 
       {/* Movements */}
       <Card className="mt-4">
         <CardHeader>
-          <CardTitle>Movement of Funds · {formatDate(date)}</CardTitle>
+          <CardTitle>{t("Movement of Funds · {date}", { date: formatDate(date) })}</CardTitle>
         </CardHeader>
         {isLoading || !data ? <SkeletonTable cols={10} /> : <MovementTable rows={data.accounts} totals={data.totalsByCurrency} isToday={isToday} />}
       </Card>
@@ -127,7 +128,7 @@ export default function TreasuryDeskPage() {
       {/* Daily bank balance, actual + projected */}
       <Card className="mt-4">
         <CardHeader>
-          <CardTitle>Daily Bank Balance · last 5 days &amp; next 10</CardTitle>
+          <CardTitle>{t("Daily Bank Balance · last 5 days & next 10")}</CardTitle>
         </CardHeader>
         {gridLoading || !grid ? (
           <SkeletonTable cols={12} />
@@ -140,13 +141,13 @@ export default function TreasuryDeskPage() {
                 bankName: a.bankName,
                 accountName: a.accountName,
                 currencyCode: a.currencyCode,
-                note: a.overdraftLimit > 0 ? `OD limit ${a.overdraftLimit.toLocaleString()}` : undefined,
+                note: a.overdraftLimit > 0 ? t("OD limit {amount}", { amount: a.overdraftLimit.toLocaleString() }) : undefined,
                 cells: a.cells.map((c) => c.balance),
               }))}
-              totals={grid.totalsByCurrency.map((t) => ({ currencyCode: t.currencyCode, cells: t.cells.map((c) => c.balance) }))}
+              totals={grid.totalsByCurrency.map((tot) => ({ currencyCode: tot.currencyCode, cells: tot.cells.map((c) => c.balance) }))}
             />
             <p className="border-t border-border px-5 py-3 text-xs text-ink-muted">
-              Past days are the recorded closing balance (a quiet day carries the last balance forward). Shaded, italic columns are projected book balances from scheduled payments, expected collections, transfers and banker acceptance maturities.
+              {t("Past days are the recorded closing balance (a quiet day carries the last balance forward). Shaded, italic columns are projected book balances from scheduled payments, expected collections, transfers and banker acceptance maturities.")}
             </p>
           </>
         )}
@@ -157,26 +158,26 @@ export default function TreasuryDeskPage() {
   );
 }
 
-function CurrencySummary({ t, isToday }: { t: DailyCurrencyTotals; isToday: boolean }) {
-  const c = t.currencyCode;
+function CurrencySummary({ tot, isToday }: { tot: DailyCurrencyTotals; isToday: boolean }) {
+  const c = tot.currencyCode;
   return (
     <Card className="p-5">
       <div className="flex items-baseline justify-between">
-        <p className="text-[13px] font-medium text-ink-secondary">{c} balance</p>
-        <p className="text-[11px] uppercase tracking-wide text-ink-muted">closing</p>
+        <p className="text-[13px] font-medium text-ink-secondary">{t("{currency} balance", { currency: c })}</p>
+        <p className="text-[11px] uppercase tracking-wide text-ink-muted">{t("closing")}</p>
       </div>
-      <p className={clsx("font-mono mt-1 text-[24px] font-medium tracking-tight", t.closing < 0 ? "text-status-critical" : "text-ink")}>{formatMoney(t.closing, c)}</p>
+      <p className={clsx("font-mono mt-1 text-[24px] font-medium tracking-tight", tot.closing < 0 ? "text-status-critical" : "text-ink")}>{formatMoney(tot.closing, c)}</p>
       <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
-        {t.overdraftLimit > 0 && <Stat wide label="Overdraft used / limit" value={`${formatMoney(t.overdraftUtilised, c)} / ${formatMoney(t.overdraftLimit, c)}`} warn={t.overdraftUtilised > 0} />}
+        {tot.overdraftLimit > 0 && <Stat wide label={t("Overdraft used / limit")} value={`${formatMoney(tot.overdraftUtilised, c)} / ${formatMoney(tot.overdraftLimit, c)}`} warn={tot.overdraftUtilised > 0} />}
         {isToday ? (
           <>
-            <Stat label="Available" value={formatMoney(t.availableCash, c)} />
-            <Stat label="Day 1 float" value={formatMoney(t.floatDay1, c)} />
-            <Stat label="Day 2 float" value={formatMoney(t.floatDay2, c)} />
-            {t.overdraftLimit > 0 && <Stat label="Available incl. OD" value={formatMoney(t.liquidity, c)} />}
+            <Stat label={t("Available")} value={formatMoney(tot.availableCash, c)} />
+            <Stat label={t("Day 1 float")} value={formatMoney(tot.floatDay1, c)} />
+            <Stat label={t("Day 2 float")} value={formatMoney(tot.floatDay2, c)} />
+            {tot.overdraftLimit > 0 && <Stat label={t("Available incl. OD")} value={formatMoney(tot.liquidity, c)} />}
           </>
         ) : (
-          <Stat label="Opening" value={formatMoney(t.opening, c)} />
+          <Stat label={t("Opening")} value={formatMoney(tot.opening, c)} />
         )}
       </dl>
     </Card>
@@ -194,13 +195,13 @@ function Stat({ label, value, warn, wide }: { label: string; value: string; warn
 
 function BalancesTable({ rows, totals, isToday }: { rows: DailyAccountRow[]; totals: DailyCurrencyTotals[]; isToday: boolean }) {
   const cols: { key: string; label: string; live?: boolean }[] = [
-    { key: "closing", label: "Balance" },
-    { key: "overdraft", label: "Overdraft used / limit" },
-    { key: "floatDay1", label: "Day 1 float", live: true },
-    { key: "floatDay2", label: "Day 2 float", live: true },
-    { key: "reserved", label: "Reserved", live: true },
-    { key: "availableCash", label: "Available", live: true },
-    { key: "liquidity", label: "Available incl. OD", live: true },
+    { key: "closing", label: t("Balance") },
+    { key: "overdraft", label: t("Overdraft used / limit") },
+    { key: "floatDay1", label: t("Day 1 float"), live: true },
+    { key: "floatDay2", label: t("Day 2 float"), live: true },
+    { key: "reserved", label: t("Reserved"), live: true },
+    { key: "availableCash", label: t("Available"), live: true },
+    { key: "liquidity", label: t("Available incl. OD"), live: true },
   ];
   const visible = cols.filter((c) => isToday || !c.live);
 
@@ -222,8 +223,8 @@ function BalancesTable({ rows, totals, isToday }: { rows: DailyAccountRow[]; tot
       <table className="w-full border-collapse text-[13px]">
         <thead>
           <tr className="border-b border-border">
-            <th className={clsx(stickyName, "min-w-[220px] text-xs font-medium uppercase tracking-wide text-ink-muted")}>Bank / Account</th>
-            <th className={clsx(th, "text-left")}>Ccy</th>
+            <th className={clsx(stickyName, "min-w-[220px] text-xs font-medium uppercase tracking-wide text-ink-muted")}>{t("Bank / Account")}</th>
+            <th className={clsx(th, "text-left")}>{t("Ccy")}</th>
             {visible.map((c) => (
               <th key={c.key} className={th}>
                 {c.label}
@@ -251,13 +252,13 @@ function BalancesTable({ rows, totals, isToday }: { rows: DailyAccountRow[]; tot
           ))}
         </tbody>
         <tfoot>
-          {totals.map((t) => (
-            <tr key={t.currencyCode} className="border-t-2 border-border font-semibold">
-              <td className={clsx(stickyName, "text-ink")}>Total</td>
-              <td className="px-3 py-2.5 text-ink-secondary">{t.currencyCode}</td>
+          {totals.map((tot) => (
+            <tr key={tot.currencyCode} className="border-t-2 border-border font-semibold">
+              <td className={clsx(stickyName, "text-ink")}>{t("Total")}</td>
+              <td className="px-3 py-2.5 text-ink-secondary">{tot.currencyCode}</td>
               {visible.map((c) => (
                 <td key={c.key} className={td}>
-                  {cell(t, c.key)}
+                  {cell(tot, c.key)}
                 </td>
               ))}
             </tr>
@@ -270,18 +271,18 @@ function BalancesTable({ rows, totals, isToday }: { rows: DailyAccountRow[]; tot
 
 function MovementTable({ rows, totals, isToday }: { rows: DailyAccountRow[]; totals: DailyCurrencyTotals[]; isToday: boolean }) {
   const cols: { key: string; label: string; tone?: "in" | "out" | "balance"; live?: boolean }[] = [
-    { key: "opening", label: "Opening", tone: "balance" },
-    { key: "collections", label: "Collections (+)", tone: "in" },
-    { key: "baDrawdown", label: "BA drawdown credited (+)", tone: "in" },
-    { key: "transfersIn", label: "Transfers in (+)", tone: "in" },
-    { key: "baSettlement", label: "BA settlement (−)", tone: "out" },
-    { key: "paymentsOut", label: "Payments (−)", tone: "out" },
-    { key: "transfersOut", label: "Transfers out (−)", tone: "out" },
-    { key: "otherMovement", label: "Other" },
-    { key: "closing", label: "Closing", tone: "balance" },
-    { key: "expectedCollections", label: "Still expected in", live: true },
-    { key: "scheduledPayments", label: "Still due out", live: true },
-    { key: "baMaturing", label: "BA maturing", live: true },
+    { key: "opening", label: t("Opening"), tone: "balance" },
+    { key: "collections", label: t("Collections (+)"), tone: "in" },
+    { key: "baDrawdown", label: t("BA drawdown credited (+)"), tone: "in" },
+    { key: "transfersIn", label: t("Transfers in (+)"), tone: "in" },
+    { key: "baSettlement", label: t("BA settlement (−)"), tone: "out" },
+    { key: "paymentsOut", label: t("Payments (−)"), tone: "out" },
+    { key: "transfersOut", label: t("Transfers out (−)"), tone: "out" },
+    { key: "otherMovement", label: t("Other") },
+    { key: "closing", label: t("Closing"), tone: "balance" },
+    { key: "expectedCollections", label: t("Still expected in"), live: true },
+    { key: "scheduledPayments", label: t("Still due out"), live: true },
+    { key: "baMaturing", label: t("BA maturing"), live: true },
   ];
   const visible = cols.filter((c) => isToday || !c.live);
   const get = (r: DailyAccountRow | DailyCurrencyTotals, key: string) => (r as unknown as Record<string, number | null>)[key];
@@ -291,8 +292,8 @@ function MovementTable({ rows, totals, isToday }: { rows: DailyAccountRow[]; tot
       <table className="w-full border-collapse text-[13px]">
         <thead>
           <tr className="border-b border-border">
-            <th className={clsx(stickyName, "min-w-[220px] text-xs font-medium uppercase tracking-wide text-ink-muted")}>Bank / Account</th>
-            <th className={clsx(th, "text-left")}>Ccy</th>
+            <th className={clsx(stickyName, "min-w-[220px] text-xs font-medium uppercase tracking-wide text-ink-muted")}>{t("Bank / Account")}</th>
+            <th className={clsx(th, "text-left")}>{t("Ccy")}</th>
             {visible.map((c) => (
               <th key={c.key} className={clsx(th, c.live && "bg-plane", c.key === "closing" && "border-l border-border")}>
                 {c.label}
@@ -317,13 +318,13 @@ function MovementTable({ rows, totals, isToday }: { rows: DailyAccountRow[]; tot
           ))}
         </tbody>
         <tfoot>
-          {totals.map((t) => (
-            <tr key={t.currencyCode} className="border-t-2 border-border font-semibold">
-              <td className={clsx(stickyName, "text-ink")}>Total</td>
-              <td className="px-3 py-2.5 text-ink-secondary">{t.currencyCode}</td>
+          {totals.map((tot) => (
+            <tr key={tot.currencyCode} className="border-t-2 border-border font-semibold">
+              <td className={clsx(stickyName, "text-ink")}>{t("Total")}</td>
+              <td className="px-3 py-2.5 text-ink-secondary">{tot.currencyCode}</td>
               {visible.map((c) => (
                 <td key={c.key} className={clsx(td, c.live && "bg-plane", c.key === "closing" && "border-l border-border")}>
-                  <Num value={get(t, c.key)} tone={c.tone} />
+                  <Num value={get(tot, c.key)} tone={c.tone} />
                 </td>
               ))}
             </tr>
@@ -331,8 +332,8 @@ function MovementTable({ rows, totals, isToday }: { rows: DailyAccountRow[]; tot
         </tfoot>
       </table>
       <p className="border-t border-border px-5 py-3 text-xs text-ink-muted">
-        Collections are receipts marked received; BA drawdown is the proceeds credited by the bank and BA settlement the amount debited at maturity. “Other” is any balance change without a ledger entry, such as a manual correction from a bank statement.
-        {isToday ? " The shaded columns are what is still scheduled for today (overdue items included)." : ""}
+        {t("Collections are receipts marked received; BA drawdown is the proceeds credited by the bank and BA settlement the amount debited at maturity. “Other” is any balance change without a ledger entry, such as a manual correction from a bank statement.")}
+        {isToday ? t(" The shaded columns are what is still scheduled for today (overdue items included).") : ""}
       </p>
     </div>
   );

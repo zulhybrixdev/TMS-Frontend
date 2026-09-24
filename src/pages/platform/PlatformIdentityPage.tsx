@@ -20,27 +20,10 @@ import { HandOverLines, NewIdpFields, apiErrorMessage, emptyIdpValues, idpReques
 // the protocol work); the customer's own admin then enters the alias in
 // their Administration -> Security tab.
 export default function PlatformIdentityPage() {
-  const { connected, logout } = usePlatformAuth();
+  const { connected } = usePlatformAuth();
 
   return (
-    <div className="min-h-screen bg-plane">
-      <header className="ledger-grid sticky top-0 z-30 flex h-14 items-center justify-between border-b border-chrome-border bg-chrome px-4 md:px-6">
-        <div className="flex items-center gap-3">
-          <Link to="/platform" className="flex items-center gap-1.5 text-[13px] text-chrome-muted hover:text-chrome-ink">
-            <ArrowLeft className="h-3.5 w-3.5" /> Tenants
-          </Link>
-          <span className="h-4 w-px bg-white/15" />
-          <div className="flex items-center gap-2">
-            <ShieldAlert className="h-4 w-4 text-chrome-ink" />
-            <p className="font-display text-[13.5px] font-semibold text-chrome-ink">Platform Console</p>
-          </div>
-        </div>
-        <Button size="sm" variant="ghost" onClick={logout} className="text-chrome-muted hover:bg-white/5 hover:text-chrome-ink">
-          <LogOut className="h-3.5 w-3.5" /> Sign out
-        </Button>
-      </header>
-
-      <main className="mx-auto max-w-5xl space-y-6 px-4 py-6 md:px-8 md:py-8">
+    <div className="space-y-6">
         <div>
           <h1 className="font-display text-[24px] font-semibold tracking-tight text-ink">Identity / SSO</h1>
           <p className="mt-1 text-sm text-ink-secondary">
@@ -51,7 +34,6 @@ export default function PlatformIdentityPage() {
         {connected.map((conn) => (
           <EnvironmentCard key={conn.env.key} conn={conn} />
         ))}
-      </main>
     </div>
   );
 }
@@ -86,8 +68,8 @@ function EnvironmentCard({ conn }: { conn: ConnectedEnvironment }) {
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center gap-2.5">
+      <CardHeader className="flex-wrap">
+        <div className="flex flex-wrap items-center gap-2.5">
           <CardTitle>{conn.env.label}</CardTitle>
           {overview &&
             (overview.reachable ? (
@@ -100,7 +82,7 @@ function EnvironmentCard({ conn }: { conn: ConnectedEnvironment }) {
               </Badge>
             ))}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {overview?.adminConsoleUrl && (
             <a href={overview.adminConsoleUrl} target="_blank" rel="noreferrer">
               <Button size="sm" variant="outline">

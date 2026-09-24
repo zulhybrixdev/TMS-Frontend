@@ -8,6 +8,8 @@ import { ApprovalTimeline } from "./ApprovalTimeline";
 import { api, ApiError } from "../../lib/api-client";
 import { formatMoney, formatDate } from "../../lib/format";
 import type { ApprovalRequestSummary } from "../../lib/types";
+import { t } from "../../i18n";
+import { tServer } from "../../i18n/server-messages";
 
 export function ApprovalActionDialog({ request, onClose, onDone }: { request: ApprovalRequestSummary; onClose: () => void; onDone: () => void }) {
   const [comment, setComment] = useState("");
@@ -18,11 +20,11 @@ export function ApprovalActionDialog({ request, onClose, onDone }: { request: Ap
     try {
       await api.post(`/approvals/${request.id}/act`, { action, comment: comment || undefined });
       toast.success(action === "APPROVE" ? "Approved" : "Rejected", {
-        description: action === "APPROVE" ? "The request has moved to the next step." : "The requester has been notified.",
+        description: action === "APPROVE" ? t("The request has moved to the next step.") : t("The requester has been notified."),
       });
       onDone();
     } catch (err) {
-      toast.error("Action failed", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Action failed"), { description: err instanceof ApiError ? err.message : undefined });
     } finally {
       setBusy(null);
     }
@@ -32,42 +34,42 @@ export function ApprovalActionDialog({ request, onClose, onDone }: { request: Ap
     <Dialog
       open
       onClose={onClose}
-      title="Review Approval Request"
-      description={request.label}
+      title={t("Review Approval Request")}
+      description={tServer(request.label)}
       size="lg"
       footer={
         <>
           <Button variant="outline" onClick={onClose}>
-            Close
+            {t("Close")}
           </Button>
           <Button variant="danger" onClick={() => act("REJECT")} loading={busy === "REJECT"} disabled={!!busy}>
-            Reject
+            {t("Reject")}
           </Button>
           <Button onClick={() => act("APPROVE")} loading={busy === "APPROVE"} disabled={!!busy}>
-            Approve
+            {t("Approve")}
           </Button>
         </>
       }
     >
       <div className="space-y-5">
         <div className="grid grid-cols-2 gap-4 rounded-lg bg-plane p-4 sm:grid-cols-3">
-          <Field label="Type" value={request.entityType === "PAYMENT" ? "Payment" : "Transfer"} />
-          <Field label="Amount" value={formatMoney(request.amount, request.currencyCode)} />
-          <Field label="Submitted" value={formatDate(request.createdAt)} />
+          <Field label={t("Type")} value={request.entityType === "PAYMENT" ? t("Payment") : t("Transfer")} />
+          <Field label={t("Amount")} value={formatMoney(request.amount, request.currencyCode)} />
+          <Field label={t("Submitted")} value={formatDate(request.createdAt)} />
           {request.payment && (
             <>
-              <Field label="Beneficiary" value={request.payment.beneficiaryName} />
-              <Field label="Source Account" value={request.payment.sourceAccount ?? "—"} />
+              <Field label={t("Beneficiary")} value={request.payment.beneficiaryName} />
+              <Field label={t("Source Account")} value={request.payment.sourceAccount ?? "—"} />
             </>
           )}
           {request.transfer && (
             <>
-              <Field label="From" value={request.transfer.sourceAccount ?? "—"} />
-              <Field label="To" value={request.transfer.destinationAccount ?? "—"} />
+              <Field label={t("From")} value={request.transfer.sourceAccount ?? "—"} />
+              <Field label={t("To")} value={request.transfer.destinationAccount ?? "—"} />
             </>
           )}
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-wide text-ink-muted">Status</p>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-ink-muted">{t("Status")}</p>
             <div className="mt-1">
               <StatusBadge status={request.status} />
             </div>
@@ -78,8 +80,8 @@ export function ApprovalActionDialog({ request, onClose, onDone }: { request: Ap
 
         {request.status === "PENDING" && (
           <div>
-            <Label htmlFor="comment">Comment (optional)</Label>
-            <Textarea id="comment" rows={3} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Add context for this decision..." />
+            <Label htmlFor="comment">{t("Comment (optional)")}</Label>
+            <Textarea id="comment" rows={3} value={comment} onChange={(e) => setComment(e.target.value)} placeholder={t("Add context for this decision...")} />
           </div>
         )}
       </div>

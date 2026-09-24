@@ -4,6 +4,7 @@
 // /subscriptions/me response is still the source of truth for what the
 // current tenant actually has.
 import type { PlanDefinition, PlanKey } from "./types";
+import { tk } from "../i18n";
 
 export const PLAN_KEYS: Record<string, PlanKey> = {
   FREE: "FREE",
@@ -20,7 +21,7 @@ export const PLAN_CATALOG: Record<PlanKey, PlanDefinition> = {
     name: "Free",
     priceMYR: 0,
     billingCycle: null,
-    description: "Core treasury essentials to get started.",
+    description: tk("Core treasury essentials to get started."),
     modules: [],
     limits: { users: 3, bankAccounts: 2 },
   },
@@ -29,7 +30,7 @@ export const PLAN_CATALOG: Record<PlanKey, PlanDefinition> = {
     name: "Pro",
     priceMYR: 99,
     billingCycle: "monthly",
-    description: "The full treasury workflow, for a growing finance team.",
+    description: tk("The full treasury workflow, for a growing finance team."),
     modules: PRO_MODULES,
     limits: { users: 15, bankAccounts: 10 },
   },
@@ -38,14 +39,14 @@ export const PLAN_CATALOG: Record<PlanKey, PlanDefinition> = {
     name: "Pro+",
     priceMYR: 299,
     billingCycle: "monthly",
-    description: "Everything in Pro, plus compliance, executive-level insight and single sign-on.",
+    description: tk("Everything in Pro, plus compliance, executive-level insight and single sign-on."),
     modules: PRO_PLUS_MODULES,
     limits: { users: null, bankAccounts: null },
   },
 };
 
 export const ACCOUNT_TYPE_OPTIONS: { value: "INDIVIDUAL" | "TEAM" | "ENTERPRISE"; label: string; description: string }[] = [
-  { value: "INDIVIDUAL", label: "Individual", description: "Just you - capped at 1 user on any plan." },
-  { value: "TEAM", label: "Team", description: "A finance team of a few to a few dozen people." },
-  { value: "ENTERPRISE", label: "Enterprise", description: "A larger organisation, typically on Pro+." },
+  { value: "INDIVIDUAL", label: tk("Individual"), description: tk("Just you - capped at 1 user on any plan.") },
+  { value: "TEAM", label: tk("Team"), description: tk("A finance team of a few to a few dozen people.") },
+  { value: "ENTERPRISE", label: tk("Enterprise"), description: tk("A larger organisation, typically on Pro+.") },
 ];

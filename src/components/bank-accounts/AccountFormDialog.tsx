@@ -7,12 +7,13 @@ import { Button } from "../ui/Button";
 import { Input, Label, Select, ErrorText } from "../ui/Input";
 import { useBanks, useCurrencies, useSites } from "../../hooks/useReferenceData";
 import { api, ApiError } from "../../lib/api-client";
+import { t, tk } from "../../i18n";
 
 const schema = z.object({
-  bankId: z.string().min(1, "Bank is required"),
-  accountName: z.string().min(2, "Account name is required"),
-  accountNumber: z.string().min(4, "Account number is required"),
-  currencyCode: z.string().length(3, "Currency is required"),
+  bankId: z.string().min(1, tk("Bank is required")),
+  accountName: z.string().min(2, tk("Account name is required")),
+  accountNumber: z.string().min(4, tk("Account number is required")),
+  currencyCode: z.string().length(3, tk("Currency is required")),
   accountType: z.enum(["OPERATING", "COLLECTION", "DISBURSEMENT", "RESERVE"]),
   // Negative = already in overdraft (bounded by the overdraft limit below).
   currentBalance: z.coerce.number(),
@@ -20,7 +21,7 @@ const schema = z.object({
   targetBalance: z.coerce.number().min(0),
   overdraftLimit: z.coerce.number().min(0),
   siteName: z.string().max(100).optional(),
-}).refine((v) => v.currentBalance >= -v.overdraftLimit, { message: "More overdrawn than the overdraft limit", path: ["currentBalance"] });
+}).refine((v) => v.currentBalance >= -v.overdraftLimit, { message: tk("More overdrawn than the overdraft limit"), path: ["currentBalance"] });
 type FormValues = z.infer<typeof schema>;
 
 export function AccountFormDialog({ open, onClose, onSaved }: { open: boolean; onClose: () => void; onSaved: () => void }) {
@@ -43,7 +44,7 @@ export function AccountFormDialog({ open, onClose, onSaved }: { open: boolean; o
       reset();
       onSaved();
     } catch (err) {
-      toast.error("Could not create account", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Could not create account"), { description: err instanceof ApiError ? err.message : undefined });
     }
   };
 
@@ -51,15 +52,15 @@ export function AccountFormDialog({ open, onClose, onSaved }: { open: boolean; o
     <Dialog
       open={open}
       onClose={onClose}
-      title="Add Bank Account"
-      description="Register a new company bank account and its balance thresholds."
+      title={t("Add Bank Account")}
+      description={t("Register a new company bank account and its balance thresholds.")}
       footer={
         <>
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button onClick={handleSubmit(onSubmit)} loading={isSubmitting}>
-            Create Account
+            {t("Create Account")}
           </Button>
         </>
       }
@@ -68,10 +69,10 @@ export function AccountFormDialog({ open, onClose, onSaved }: { open: boolean; o
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label htmlFor="bankId" required>
-              Bank
+              {t("Bank")}
             </Label>
             <Select id="bankId" {...register("bankId")} error={!!errors.bankId}>
-              <option value="">Select bank</option>
+              <option value="">{t("Select bank")}</option>
               {banks?.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.name}
@@ -82,7 +83,7 @@ export function AccountFormDialog({ open, onClose, onSaved }: { open: boolean; o
           </div>
           <div>
             <Label htmlFor="currencyCode" required>
-              Currency
+              {t("Currency")}
             </Label>
             <Select id="currencyCode" {...register("currencyCode")} error={!!errors.currencyCode}>
               {currencies?.map((c) => (
@@ -97,29 +98,29 @@ export function AccountFormDialog({ open, onClose, onSaved }: { open: boolean; o
 
         <div>
           <Label htmlFor="accountName" required>
-            Account Name
+            {t("Account Name")}
           </Label>
-          <Input id="accountName" {...register("accountName")} error={!!errors.accountName} placeholder="e.g. Maybank Operating Account" />
+          <Input id="accountName" {...register("accountName")} error={!!errors.accountName} placeholder={t("e.g. Maybank Operating Account")} />
           <ErrorText>{errors.accountName?.message}</ErrorText>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label htmlFor="accountNumber" required>
-              Account Number
+              {t("Account Number")}
             </Label>
             <Input id="accountNumber" {...register("accountNumber")} error={!!errors.accountNumber} />
             <ErrorText>{errors.accountNumber?.message}</ErrorText>
           </div>
           <div>
             <Label htmlFor="accountType" required>
-              Account Type
+              {t("Account Type")}
             </Label>
             <Select id="accountType" {...register("accountType")}>
-              <option value="OPERATING">Operating</option>
-              <option value="COLLECTION">Collection</option>
-              <option value="DISBURSEMENT">Disbursement</option>
-              <option value="RESERVE">Reserve</option>
+              <option value="OPERATING">{t("Operating")}</option>
+              <option value="COLLECTION">{t("Collection")}</option>
+              <option value="DISBURSEMENT">{t("Disbursement")}</option>
+              <option value="RESERVE">{t("Reserve")}</option>
             </Select>
           </div>
         </div>
@@ -127,20 +128,20 @@ export function AccountFormDialog({ open, onClose, onSaved }: { open: boolean; o
         <div className="grid grid-cols-3 gap-3">
           <div>
             <Label htmlFor="currentBalance" required>
-              Opening Balance
+              {t("Opening Balance")}
             </Label>
             <Input id="currentBalance" type="number" step="0.01" {...register("currentBalance")} error={!!errors.currentBalance} />
             <ErrorText>{errors.currentBalance?.message}</ErrorText>
           </div>
           <div>
             <Label htmlFor="minimumBalance" required>
-              Minimum Balance
+              {t("Minimum Balance")}
             </Label>
             <Input id="minimumBalance" type="number" step="0.01" {...register("minimumBalance")} error={!!errors.minimumBalance} />
           </div>
           <div>
             <Label htmlFor="targetBalance" required>
-              Target Balance
+              {t("Target Balance")}
             </Label>
             <Input id="targetBalance" type="number" step="0.01" {...register("targetBalance")} error={!!errors.targetBalance} />
           </div>
@@ -148,19 +149,19 @@ export function AccountFormDialog({ open, onClose, onSaved }: { open: boolean; o
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label htmlFor="overdraftLimit">Overdraft Limit</Label>
+            <Label htmlFor="overdraftLimit">{t("Overdraft Limit")}</Label>
             <Input id="overdraftLimit" type="number" step="0.01" {...register("overdraftLimit")} error={!!errors.overdraftLimit} />
-            <p className="mt-1 text-[11.5px] text-ink-muted">Approved overdraft facility on this account (0 = none).</p>
+            <p className="mt-1 text-[11.5px] text-ink-muted">{t("Approved overdraft facility on this account (0 = none).")}</p>
           </div>
           <div>
-            <Label htmlFor="siteName">Site / Entity</Label>
-            <Input id="siteName" list="site-options" {...register("siteName")} placeholder="e.g. PJRM, Bukit Raja" />
+            <Label htmlFor="siteName">{t("Site / Entity")}</Label>
+            <Input id="siteName" list="site-options" {...register("siteName")} placeholder={t("e.g. PJRM, Bukit Raja")} />
             <datalist id="site-options">
               {sites?.map((name) => (
                 <option key={name} value={name} />
               ))}
             </datalist>
-            <p className="mt-1 text-[11.5px] text-ink-muted">Groups this account's cash reserve by site.</p>
+            <p className="mt-1 text-[11.5px] text-ink-muted">{t("Groups this account's cash reserve by site.")}</p>
           </div>
         </div>
       </form>

@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import clsx from "clsx";
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
+import { t } from "../../i18n";
 
 export interface Column<T> {
   key: string;
@@ -75,17 +76,17 @@ export function Pagination({ page, totalPages, total, pageSize, onPage }: { page
   return (
     <div className="flex items-center justify-between border-t border-border px-5 py-3 text-[13px] text-ink-secondary">
       <span>
-        Showing <span className="font-medium text-ink">{start}-{end}</span> of <span className="font-medium text-ink">{total}</span>
+        {t("Showing {start}-{end} of {total}", { start, end, total })}
       </span>
       <div className="flex items-center gap-1">
         <button disabled={page <= 1} onClick={() => onPage(page - 1)} className="rounded-md px-2.5 py-1 hover:bg-plane disabled:opacity-40 disabled:hover:bg-transparent">
-          Previous
+          {t("Previous")}
         </button>
         <span className="px-2 tabular-nums">
           {page} / {totalPages}
         </span>
         <button disabled={page >= totalPages} onClick={() => onPage(page + 1)} className="rounded-md px-2.5 py-1 hover:bg-plane disabled:opacity-40 disabled:hover:bg-transparent">
-          Next
+          {t("Next")}
         </button>
       </div>
     </div>

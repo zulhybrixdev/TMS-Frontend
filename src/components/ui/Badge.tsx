@@ -1,5 +1,6 @@
 import { HTMLAttributes } from "react";
 import clsx from "clsx";
+import { tEnum } from "../../i18n";
 
 type Tone = "good" | "warning" | "serious" | "critical" | "neutral" | "brand";
 
@@ -59,7 +60,7 @@ export function StatusBadge({ status }: { status: string }) {
   const tone = STATUS_TONE[status] ?? "neutral";
   return (
     <Badge tone={tone} dot pulse={LIVE_STATUSES.has(status)}>
-      {status.replace(/_/g, " ")}
+      {tEnum(status) !== status ? tEnum(status) : status.replace(/_/g, " ")}
     </Badge>
   );
 }

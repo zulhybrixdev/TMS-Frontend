@@ -21,15 +21,16 @@ import { Badge } from "../ui/Badge";
 import { formatMoney, formatDate } from "../../lib/format";
 import { useAuth } from "../../lib/auth-context";
 import { PERMISSIONS } from "../../lib/permissions";
+import { t, tk } from "../../i18n";
 
 const schema = z.object({
-  name: z.string().min(2, "Required"),
-  beneficiaryName: z.string().min(2, "Required"),
-  beneficiaryAccount: z.string().min(4, "Required"),
-  beneficiaryBank: z.string().min(2, "Required"),
-  amount: z.coerce.number().positive("Must be greater than 0"),
-  currencyCode: z.string().length(3, "Required"),
-  sourceAccountId: z.string().min(1, "Required"),
+  name: z.string().min(2, tk("Required")),
+  beneficiaryName: z.string().min(2, tk("Required")),
+  beneficiaryAccount: z.string().min(4, tk("Required")),
+  beneficiaryBank: z.string().min(2, tk("Required")),
+  amount: z.coerce.number().positive(tk("Must be greater than 0")),
+  currencyCode: z.string().length(3, tk("Required")),
+  sourceAccountId: z.string().min(1, tk("Required")),
   description: z.string().optional(),
   reference: z.string().optional(),
   frequency: z.enum(["NONE", "WEEKLY", "MONTHLY"]),
@@ -50,28 +51,28 @@ export function PaymentTemplatesTab() {
   const { data, isLoading } = useQuery({ queryKey: ["payment-templates"], queryFn: () => api.get<PaymentTemplateRow[]>("/payment-templates") });
 
   const columns: Column<PaymentTemplateRow>[] = [
-    { key: "name", header: "Template", render: (t) => <span className="font-medium text-ink">{t.name}</span> },
+    { key: "name", header: t("Template"), render: (tpl) => <span className="font-medium text-ink">{tpl.name}</span> },
     {
       key: "beneficiaryName",
-      header: "Beneficiary",
-      render: (t) => (
+      header: t("Beneficiary"),
+      render: (tpl) => (
         <div>
-          <p className="text-ink">{t.beneficiaryName}</p>
-          <p className="text-xs text-ink-muted">{t.beneficiaryBank}</p>
+          <p className="text-ink">{tpl.beneficiaryName}</p>
+          <p className="text-xs text-ink-muted">{tpl.beneficiaryBank}</p>
         </div>
       ),
     },
-    { key: "amount", header: "Amount", align: "right", render: (t) => <span className="tabular-nums">{formatMoney(t.amount, t.currencyCode)}</span> },
+    { key: "amount", header: t("Amount"), align: "right", render: (tpl) => <span className="tabular-nums">{formatMoney(tpl.amount, tpl.currencyCode)}</span> },
     {
       key: "schedule",
-      header: "Schedule",
-      render: (t) =>
-        t.frequency === "NONE" ? (
-          <span className="text-xs text-ink-muted">Manual only</span>
+      header: t("Schedule"),
+      render: (tpl) =>
+        tpl.frequency === "NONE" ? (
+          <span className="text-xs text-ink-muted">{t("Manual only")}</span>
         ) : (
           <div>
-            <Badge tone={t.isActive ? "brand" : "neutral"}>{t.frequency === "WEEKLY" ? "Weekly" : "Monthly"}</Badge>
-            {t.nextRunDate && <p className="mt-1 text-xs text-ink-muted">Next: {formatDate(t.nextRunDate)}</p>}
+            <Badge tone={tpl.isActive ? "brand" : "neutral"}>{tpl.frequency === "WEEKLY" ? t("Weekly") : t("Monthly")}</Badge>
+            {tpl.nextRunDate && <p className="mt-1 text-xs text-ink-muted">{t("Next:")} {formatDate(tpl.nextRunDate)}</p>}
           </div>
         ),
     },
@@ -79,17 +80,17 @@ export function PaymentTemplatesTab() {
       key: "use",
       header: "",
       align: "right",
-      render: (t) =>
+      render: (tpl) =>
         canCreatePayment && (
           <Button
             size="sm"
             variant="outline"
             onClick={(e) => {
               e.stopPropagation();
-              setUsing(t);
+              setUsing(tpl);
             }}
           >
-            <Play className="h-3.5 w-3.5" /> Use
+            <Play className="h-3.5 w-3.5" /> {t("Use")}
           </Button>
         ),
     },
@@ -106,7 +107,7 @@ export function PaymentTemplatesTab() {
         actions={
           canManage && (
             <Button onClick={() => setEditing("new")}>
-              <Plus className="h-4 w-4" /> New Template
+              <Plus className="h-4 w-4" /> {t("New Template")}
             </Button>
           )
         }
@@ -114,11 +115,11 @@ export function PaymentTemplatesTab() {
       {!data || data.length === 0 ? (
         <EmptyState
           icon={<LayoutTemplate className="h-5 w-5" />}
-          title="No payment templates yet"
-          description="Save a recurring payment (rent, retainers, subscriptions) as a template to one-click it into a new draft payment next time, instead of retyping every field."
+          title={t("No payment templates yet")}
+          description={t("Save a recurring payment (rent, retainers, subscriptions) as a template to one-click it into a new draft payment next time, instead of retyping every field.")}
         />
       ) : (
-        <DataTable columns={columns} rows={data} rowKey={(t) => t.id} onRowClick={canManage ? setEditing : undefined} />
+        <DataTable columns={columns} rows={data} rowKey={(tpl) => tpl.id} onRowClick={canManage ? setEditing : undefined} />
       )}
 
       {editing && (
@@ -143,18 +144,18 @@ export function PaymentTemplatesTab() {
       <ConfirmDialog
         open={!!removing}
         onClose={() => setRemoving(null)}
-        title="Delete template?"
-        description={removing ? `"${removing.name}" will be permanently deleted. This doesn't affect payments already created from it.` : undefined}
-        confirmLabel="Delete"
+        title={t("Delete template?")}
+        description={removing ? t("\"{name}\" will be permanently deleted. This doesn't affect payments already created from it.", { name: removing.name }) : undefined}
+        confirmLabel={t("Delete")}
         tone="danger"
         onConfirm={async () => {
           if (!removing) return;
           try {
             await api.delete(`/payment-templates/${removing.id}`);
-            toast.success("Template deleted");
+            toast.success(t("Template deleted"));
             qc.invalidateQueries({ queryKey: ["payment-templates"] });
           } catch (err) {
-            toast.error("Could not delete template", { description: err instanceof ApiError ? err.message : undefined });
+            toast.error(t("Could not delete template"), { description: err instanceof ApiError ? err.message : undefined });
           } finally {
             setRemoving(null);
           }
@@ -164,17 +165,17 @@ export function PaymentTemplatesTab() {
       <ConfirmDialog
         open={!!using}
         onClose={() => setUsing(null)}
-        title="Create payment from template?"
-        description={using ? `A new DRAFT payment of ${formatMoney(using.amount, using.currencyCode)} to ${using.beneficiaryName} will be created. You can still edit it before submitting for approval.` : undefined}
-        confirmLabel="Create Draft Payment"
+        title={t("Create payment from template?")}
+        description={using ? t("A new DRAFT payment of {amount} to {name} will be created. You can still edit it before submitting for approval.", { amount: formatMoney(using.amount, using.currencyCode), name: using.beneficiaryName }) : undefined}
+        confirmLabel={t("Create Draft Payment")}
         onConfirm={async () => {
           if (!using) return;
           try {
             const payment = await api.post<{ id: string }>(`/payment-templates/${using.id}/use`, {});
-            toast.success("Draft payment created");
+            toast.success(t("Draft payment created"));
             navigate(`/payments/${payment.id}`);
           } catch (err) {
-            toast.error("Could not create payment", { description: err instanceof ApiError ? err.message : undefined });
+            toast.error(t("Could not create payment"), { description: err instanceof ApiError ? err.message : undefined });
           } finally {
             setUsing(null);
           }
@@ -224,10 +225,10 @@ function TemplateFormDialog({
     try {
       if (template) await api.patch(`/payment-templates/${template.id}`, values);
       else await api.post("/payment-templates", values);
-      toast.success("Template saved");
+      toast.success(t("Template saved"));
       onSaved();
     } catch (err) {
-      toast.error("Could not save template", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Could not save template"), { description: err instanceof ApiError ? err.message : undefined });
     }
   });
 
@@ -235,21 +236,21 @@ function TemplateFormDialog({
     <Dialog
       open
       onClose={onClose}
-      title={template ? "Edit Payment Template" : "New Payment Template"}
-      description="A saved payment shape you can one-click into a new draft payment - no auto-scheduling, you still trigger and approve each use."
+      title={template ? t("Edit Payment Template") : t("New Payment Template")}
+      description={t("A saved payment shape you can one-click into a new draft payment - no auto-scheduling, you still trigger and approve each use.")}
       size="lg"
       footer={
         <>
           {onDelete && (
             <Button variant="outline" className="mr-auto text-status-critical" onClick={onDelete}>
-              Delete
+              {t("Delete")}
             </Button>
           )}
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button onClick={onSubmit} loading={isSubmitting}>
-            Save
+            {t("Save")}
           </Button>
         </>
       }
@@ -257,23 +258,23 @@ function TemplateFormDialog({
       <form className="space-y-4" onSubmit={onSubmit}>
         <div>
           <Label htmlFor="name" required>
-            Template Name
+            {t("Template Name")}
           </Label>
-          <Input id="name" {...register("name")} error={!!errors.name} placeholder="e.g. Monthly Office Rent" />
+          <Input id="name" {...register("name")} error={!!errors.name} placeholder={t("e.g. Monthly Office Rent")} />
           <ErrorText>{errors.name?.message}</ErrorText>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label htmlFor="beneficiaryName" required>
-              Beneficiary Name
+              {t("Beneficiary Name")}
             </Label>
             <Input id="beneficiaryName" {...register("beneficiaryName")} error={!!errors.beneficiaryName} />
             <ErrorText>{errors.beneficiaryName?.message}</ErrorText>
           </div>
           <div>
             <Label htmlFor="beneficiaryBank" required>
-              Beneficiary Bank
+              {t("Beneficiary Bank")}
             </Label>
             <Input id="beneficiaryBank" {...register("beneficiaryBank")} error={!!errors.beneficiaryBank} />
             <ErrorText>{errors.beneficiaryBank?.message}</ErrorText>
@@ -282,7 +283,7 @@ function TemplateFormDialog({
 
         <div>
           <Label htmlFor="beneficiaryAccount" required>
-            Beneficiary Account Number
+            {t("Beneficiary Account Number")}
           </Label>
           <Input id="beneficiaryAccount" {...register("beneficiaryAccount")} error={!!errors.beneficiaryAccount} />
           <ErrorText>{errors.beneficiaryAccount?.message}</ErrorText>
@@ -291,23 +292,23 @@ function TemplateFormDialog({
         <div className="grid grid-cols-3 gap-3">
           <div>
             <Label htmlFor="amount" required>
-              Amount
+              {t("Amount")}
             </Label>
             <Input id="amount" type="number" step="0.01" {...register("amount")} error={!!errors.amount} />
             <ErrorText>{errors.amount?.message}</ErrorText>
           </div>
           <div>
             <Label htmlFor="currencyCode" required>
-              Currency
+              {t("Currency")}
             </Label>
             <Input id="currencyCode" {...register("currencyCode")} error={!!errors.currencyCode} maxLength={3} className="uppercase" />
           </div>
           <div>
             <Label htmlFor="sourceAccountId" required>
-              Source Account
+              {t("Source Account")}
             </Label>
             <Select id="sourceAccountId" {...register("sourceAccountId")} error={!!errors.sourceAccountId}>
-              <option value="">Select account</option>
+              <option value="">{t("Select account")}</option>
               {accounts?.items.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.accountName}
@@ -320,34 +321,34 @@ function TemplateFormDialog({
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label htmlFor="reference">Reference</Label>
+            <Label htmlFor="reference">{t("Reference")}</Label>
             <Input id="reference" {...register("reference")} />
           </div>
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t("Description")}</Label>
             <Input id="description" {...register("description")} />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3 border-t border-border pt-4">
           <div>
-            <Label htmlFor="frequency">Auto-create schedule</Label>
+            <Label htmlFor="frequency">{t("Auto-create schedule")}</Label>
             <Select id="frequency" {...register("frequency")}>
-              <option value="NONE">Manual only (use the Use button)</option>
-              <option value="WEEKLY">Every week</option>
-              <option value="MONTHLY">Every month</option>
+              <option value="NONE">{t("Manual only (use the Use button)")}</option>
+              <option value="WEEKLY">{t("Every week")}</option>
+              <option value="MONTHLY">{t("Every month")}</option>
             </Select>
           </div>
           {frequency !== "NONE" && (
             <div>
-              <Label htmlFor="nextRunDate">Next run date</Label>
+              <Label htmlFor="nextRunDate">{t("Next run date")}</Label>
               <Input id="nextRunDate" type="date" {...register("nextRunDate")} />
             </div>
           )}
         </div>
         {frequency !== "NONE" && (
           <p className="text-xs text-ink-muted">
-            A new draft payment will be created automatically on this schedule - you'll still need to review and submit it for approval yourself, same as clicking "Use" by hand.
+            {t("A new draft payment will be created automatically on this schedule - you'll still need to review and submit it for approval yourself, same as clicking \"Use\" by hand.")}
           </p>
         )}
       </form>

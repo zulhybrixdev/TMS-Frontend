@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import { formatDate, formatNumber } from "../../lib/format";
+import { t } from "../../i18n";
 
 export interface MatrixColumn {
   date: string;
@@ -32,12 +33,12 @@ export function BalanceMatrix({ columns, rows, totals }: { columns: MatrixColumn
       <table className="w-full border-collapse text-[13px]">
         <thead>
           <tr className="border-b border-border">
-            <th className="sticky left-0 z-10 min-w-[220px] bg-surface-raised px-5 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-ink-muted">Bank / Account</th>
-            <th className="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-ink-muted">Ccy</th>
+            <th className="sticky left-0 z-10 min-w-[220px] bg-surface-raised px-5 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-ink-muted">{t("Bank / Account")}</th>
+            <th className="px-3 py-2.5 text-left text-xs font-medium uppercase tracking-wide text-ink-muted">{t("Ccy")}</th>
             {columns.map((c) => (
               <th key={c.date} className={clsx("whitespace-nowrap px-3 py-2 text-right text-xs font-medium text-ink-muted", columnTone(c.kind))}>
                 <p className="uppercase tracking-wide">{formatDate(c.date, { weekday: "short", day: "2-digit", month: "short" })}</p>
-                <p className="text-[10px] font-normal normal-case">{c.kind === "actual" ? "actual" : c.kind === "today" ? "today" : "projected"}</p>
+                <p className="text-[10px] font-normal normal-case">{c.kind === "actual" ? t("actual") : c.kind === "today" ? t("today") : t("projected")}</p>
               </th>
             ))}
           </tr>
@@ -62,11 +63,11 @@ export function BalanceMatrix({ columns, rows, totals }: { columns: MatrixColumn
           ))}
         </tbody>
         <tfoot>
-          {totals.map((t) => (
-            <tr key={t.currencyCode} className="border-t-2 border-border font-semibold">
-              <td className="sticky left-0 z-10 bg-surface-raised px-5 py-2.5 text-ink">Total</td>
-              <td className="px-3 py-2.5 text-ink-secondary">{t.currencyCode}</td>
-              {t.cells.map((v, i) => (
+          {totals.map((tot) => (
+            <tr key={tot.currencyCode} className="border-t-2 border-border font-semibold">
+              <td className="sticky left-0 z-10 bg-surface-raised px-5 py-2.5 text-ink">{t("Total")}</td>
+              <td className="px-3 py-2.5 text-ink-secondary">{tot.currencyCode}</td>
+              {tot.cells.map((v, i) => (
                 <td key={columns[i].date} className={clsx("whitespace-nowrap px-3 py-2.5 text-right", columnTone(columns[i].kind))}>
                   {renderCell(v, columns[i].kind)}
                 </td>

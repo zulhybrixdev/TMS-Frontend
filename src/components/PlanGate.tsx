@@ -7,6 +7,7 @@ import { Skeleton } from "./ui/Skeleton";
 import { Button } from "./ui/Button";
 import type { ModuleKey } from "../lib/types";
 import { PLAN_CATALOG } from "../lib/plans";
+import { t } from "../i18n";
 
 // Wraps a plan-gated page/section: shows its children only if the tenant's
 // current plan includes `module`, otherwise a consistent upgrade prompt
@@ -24,11 +25,11 @@ export function PlanGate({ module, feature, children }: { module: ModuleKey; fea
   return (
     <EmptyState
       icon={<Lock className="h-5 w-5" />}
-      title={`${feature} requires an upgrade`}
-      description={`${feature} is available on the ${requiredPlan?.name ?? "Pro"} plan and above. You're currently on ${data?.subscription.plan.name ?? "Free"}.`}
+      title={t("{feature} requires an upgrade", { feature })}
+      description={t("{feature} is available on the {plan} plan and above. You're currently on {current}.", { feature, plan: requiredPlan?.name ?? "Pro", current: data?.subscription.plan.name ?? "Free" })}
       action={
         <Button size="sm" onClick={() => navigate("/administration?tab=subscription")}>
-          View plans
+          {t("View plans")}
         </Button>
       }
     />

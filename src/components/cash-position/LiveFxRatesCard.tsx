@@ -7,10 +7,11 @@ import { Card, CardBody, CardHeader, CardTitle } from "../ui/Card";
 import { Badge } from "../ui/Badge";
 import { Skeleton } from "../ui/Skeleton";
 import { EmptyState } from "../ui/EmptyState";
+import { getLocale, t } from "../../i18n";
 
 export function LiveFxRatesCard() {
   return (
-    <PlanGate module="advanced_insights" feature="Live FX Rates">
+    <PlanGate module="advanced_insights" feature={t("Live FX Rates")}>
       <LiveFxRatesCardInner />
     </PlanGate>
   );
@@ -38,17 +39,17 @@ function LiveFxRatesCardInner() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-1.5">
-          <Radio className="h-4 w-4 text-ink-muted" /> Live FX Rates
+          <Radio className="h-4 w-4 text-ink-muted" /> {t("Live FX Rates")}
         </CardTitle>
         {data && (
           <Badge tone={data.source === "twelvedata" ? "good" : "neutral"} dot pulse={data.source === "twelvedata"}>
-            {data.source === "twelvedata" ? "Live" : "Daily reference"}
+            {data.source === "twelvedata" ? t("Live") : t("Daily reference")}
           </Badge>
         )}
       </CardHeader>
       <CardBody>
         {quotes.length === 0 ? (
-          <EmptyState title="Single-currency tenant" description="Every account is already in MYR - nothing to quote." />
+          <EmptyState title={t("Single-currency tenant")} description={t("Every account is already in MYR - nothing to quote.")} />
         ) : isLoading || !data ? (
           <Skeleton className="h-24 w-full" />
         ) : (
@@ -62,8 +63,8 @@ function LiveFxRatesCardInner() {
               ))}
             </div>
             <p className="mt-3 text-[11px] text-ink-muted">
-              As of {new Date(data.asOf).toLocaleTimeString("en-MY")}
-              {data.source === "twelvedata" ? " - Twelve Data intraday quote" : " - Twelve Data unavailable, showing the daily reference rate instead"}.
+              {t("As of {time}", { time: new Date(data.asOf).toLocaleTimeString(getLocale()) })}
+              {data.source === "twelvedata" ? t(" - Twelve Data intraday quote") : t(" - Twelve Data unavailable, showing the daily reference rate instead")}.
             </p>
           </>
         )}

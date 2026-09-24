@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { InputHTMLAttributes, LabelHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes, forwardRef } from "react";
 import clsx from "clsx";
 import { ChevronDown } from "lucide-react";
@@ -32,8 +33,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSel
 Select.displayName = "Select";
 
 export function ErrorText({ children }: { children?: string }) {
+  // Validation messages come from module-level zod schemas (English, evaluated
+  // once at import), so they are translated here, when shown.
   if (!children) return null;
-  return <p className="text-xs text-status-critical mt-1">{children}</p>;
+  return <p className="text-xs text-status-critical mt-1">{t(children)}</p>;
 }
 
 export function Label(props: LabelHTMLAttributes<HTMLLabelElement> & { required?: boolean }) {

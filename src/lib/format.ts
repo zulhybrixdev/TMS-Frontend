@@ -1,3 +1,5 @@
+import { getLocale } from "../i18n";
+
 // Formatting helpers used across every screen so numbers/dates/status labels
 // stay visually consistent.
 
@@ -19,19 +21,19 @@ export function formatCompact(n: number): string {
 
 export function formatDate(value: string | Date, opts: Intl.DateTimeFormatOptions = { day: "2-digit", month: "short", year: "numeric" }): string {
   const d = typeof value === "string" ? new Date(value) : value;
-  return d.toLocaleDateString("en-MY", opts);
+  return d.toLocaleDateString(getLocale(), opts);
 }
 
 export function formatDateTime(value: string | Date): string {
   const d = typeof value === "string" ? new Date(value) : value;
-  return d.toLocaleString("en-MY", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  return d.toLocaleString(getLocale(), { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
 export function formatRelative(value: string | Date): string {
   const d = typeof value === "string" ? new Date(value) : value;
   const diffMs = d.getTime() - Date.now();
   const diffMin = Math.round(diffMs / 60000);
-  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+  const rtf = new Intl.RelativeTimeFormat(getLocale(), { numeric: "auto" });
   if (Math.abs(diffMin) < 60) return rtf.format(diffMin, "minute");
   const diffHour = Math.round(diffMin / 60);
   if (Math.abs(diffHour) < 24) return rtf.format(diffHour, "hour");

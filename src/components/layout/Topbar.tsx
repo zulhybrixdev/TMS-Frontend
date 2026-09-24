@@ -9,6 +9,9 @@ import { api } from "../../lib/api-client";
 import { initials, formatRelative } from "../../lib/format";
 import type { NotificationRow } from "../../lib/types";
 import { Link } from "react-router-dom";
+import { t } from "../../i18n";
+import { LanguageSwitcher } from "../../i18n/LanguageSwitcher";
+import { tServer } from "../../i18n/server-messages";
 
 export function Topbar({ onMenu, onSearch }: { onMenu: () => void; onSearch: () => void }) {
   const { user, logout, hasPermission } = useAuth();
@@ -53,11 +56,12 @@ export function Topbar({ onMenu, onSearch }: { onMenu: () => void; onSearch: () 
         className="hidden items-center gap-2.5 rounded-lg border border-border bg-plane px-3 py-1.5 text-[13px] text-ink-muted transition-colors hover:border-brand/40 hover:text-ink-secondary md:flex"
       >
         <Search className="h-3.5 w-3.5" />
-        <span>Jump to...</span>
+        <span>{t("Jump to...")}</span>
         <kbd className="ml-6 rounded border border-border bg-surface-raised px-1.5 py-0.5 font-mono text-[10px] text-ink-muted">⌘K</kbd>
       </button>
 
       <div className="flex items-center gap-2">
+        <LanguageSwitcher />
         <div className="relative" ref={notifRef}>
           <button onClick={() => setNotifOpen((v) => !v)} className="relative rounded-md p-2 text-ink-secondary hover:bg-plane">
             <Bell className="h-[18px] w-[18px]" />
@@ -66,21 +70,21 @@ export function Topbar({ onMenu, onSearch }: { onMenu: () => void; onSearch: () 
           {notifOpen && (
             <div className="absolute right-0 z-40 mt-2 w-80 rounded-card border border-border bg-surface-raised shadow-popover animate-slide-up">
               <div className="flex items-center justify-between border-b border-border px-4 py-3">
-                <p className="text-[13px] font-semibold text-ink">Notifications</p>
+                <p className="text-[13px] font-semibold text-ink">{t("Notifications")}</p>
                 {unreadCount > 0 && (
                   <button onClick={markAllRead} className="text-xs font-medium text-brand hover:underline">
-                    Mark all read
+                    {t("Mark all read")}
                   </button>
                 )}
               </div>
               <div className="max-h-80 overflow-y-auto">
                 {!notifications || notifications.length === 0 ? (
-                  <p className="px-4 py-6 text-center text-[13px] text-ink-muted">No notifications yet</p>
+                  <p className="px-4 py-6 text-center text-[13px] text-ink-muted">{t("No notifications yet")}</p>
                 ) : (
                   notifications.slice(0, 12).map((n) => (
                     <div key={n.id} className={clsx("border-b border-border px-4 py-3 last:border-0", !n.isRead && "bg-brand-soft/40")}>
-                      <p className="text-[13px] font-medium text-ink">{n.title}</p>
-                      <p className="mt-0.5 text-xs text-ink-secondary">{n.message}</p>
+                      <p className="text-[13px] font-medium text-ink">{tServer(n.title)}</p>
+                      <p className="mt-0.5 text-xs text-ink-secondary">{tServer(n.message)}</p>
                       <p className="mt-1 text-[11px] text-ink-muted">{formatRelative(n.createdAt)}</p>
                     </div>
                   ))
@@ -111,23 +115,23 @@ export function Topbar({ onMenu, onSearch }: { onMenu: () => void; onSearch: () 
               </div>
               {subscription && (
                 <div className="border-b border-border px-3.5 py-2.5">
-                  <p className="text-[11px] uppercase tracking-wider text-ink-muted">Organisation</p>
+                  <p className="text-[11px] uppercase tracking-wider text-ink-muted">{t("Organisation")}</p>
                   <p className="mt-0.5 text-[13px] font-medium text-ink">{subscription.tenant.name}</p>
                   <p className="mt-1 text-[11px] text-ink-muted">
-                    Plan: <span className="font-medium text-ink-secondary">{subscription.subscription.plan.name}</span>
+                    {t("Plan:")} <span className="font-medium text-ink-secondary">{subscription.subscription.plan.name}</span>
                   </p>
                 </div>
               )}
               <Link to="/account" className="block px-3.5 py-2 text-[13px] text-ink-secondary hover:bg-plane hover:text-ink" onClick={() => setUserMenuOpen(false)}>
-                My Account
+                {t("My Account")}
               </Link>
               {canAdminister && (
                 <Link to="/administration" className="block px-3.5 py-2 text-[13px] text-ink-secondary hover:bg-plane hover:text-ink" onClick={() => setUserMenuOpen(false)}>
-                  Administration
+                  {t("Administration")}
                 </Link>
               )}
               <button onClick={logout} className="flex w-full items-center gap-2 px-3.5 py-2 text-[13px] text-status-critical hover:bg-status-critical-soft">
-                <LogOut className="h-3.5 w-3.5" /> Sign out
+                <LogOut className="h-3.5 w-3.5" /> {t("Sign out")}
               </button>
             </div>
           )}

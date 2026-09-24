@@ -14,6 +14,7 @@ import { CurrenciesTab } from "./CurrenciesTab";
 import { ApprovalRulesTab } from "./ApprovalRulesTab";
 import { SettingsTab } from "./SettingsTab";
 import { SecurityTab } from "./SecurityTab";
+import { t } from "../../i18n";
 
 // Pricing/billing copy, same POC-exclusion flag as registration - see App.tsx.
 const BILLING_ENABLED = import.meta.env.VITE_ENABLE_BILLING === "true";
@@ -28,14 +29,14 @@ export default function AdministrationPage() {
   // sso-config.service.ts (hiding it here is a convenience, not the gate).
   const showSecurity = hasPermission(PERMISSIONS.SETTINGS_MANAGE) && subscription?.tenant.accountType !== "INDIVIDUAL";
   const tabs = [
-    hasPermission(PERMISSIONS.USERS_MANAGE) && { key: "users", label: "Users" },
-    hasPermission(PERMISSIONS.ROLES_MANAGE) && { key: "roles", label: "Roles & Permissions" },
-    hasPermission(PERMISSIONS.BANKS_MANAGE) && { key: "banks", label: "Banks" },
-    hasPermission(PERMISSIONS.SETTINGS_MANAGE) && { key: "currencies", label: "Currencies" },
-    hasPermission(PERMISSIONS.APPROVAL_RULES_MANAGE) && { key: "approval-rules", label: "Approval Rules" },
-    hasPermission(PERMISSIONS.SETTINGS_MANAGE) && { key: "settings", label: "System Settings" },
-    showSecurity && { key: "security", label: "Security" },
-    BILLING_ENABLED && hasPermission(PERMISSIONS.SETTINGS_MANAGE) && { key: "subscription", label: "Subscription" },
+    hasPermission(PERMISSIONS.USERS_MANAGE) && { key: "users", label: t("Users") },
+    hasPermission(PERMISSIONS.ROLES_MANAGE) && { key: "roles", label: t("Roles & Permissions") },
+    hasPermission(PERMISSIONS.BANKS_MANAGE) && { key: "banks", label: t("Banks") },
+    hasPermission(PERMISSIONS.SETTINGS_MANAGE) && { key: "currencies", label: t("Currencies") },
+    hasPermission(PERMISSIONS.APPROVAL_RULES_MANAGE) && { key: "approval-rules", label: t("Approval Rules") },
+    hasPermission(PERMISSIONS.SETTINGS_MANAGE) && { key: "settings", label: t("System Settings") },
+    showSecurity && { key: "security", label: t("Security") },
+    BILLING_ENABLED && hasPermission(PERMISSIONS.SETTINGS_MANAGE) && { key: "subscription", label: t("Subscription") },
   ].filter(Boolean) as { key: string; label: string }[];
 
   const initialTab = searchParams.get("tab");
@@ -43,7 +44,7 @@ export default function AdministrationPage() {
 
   return (
     <>
-      <PageHeader title="Administration" description="Manage users, roles, banks, currencies, approval rules, subscription, and system settings." />
+      <PageHeader title={t("Administration")} description={t("Manage users, roles, banks, currencies, approval rules, subscription, and system settings.")} />
       <Card>
         <Tabs tabs={tabs} active={tab} onChange={setTab} />
         <div className="p-5">
@@ -52,7 +53,7 @@ export default function AdministrationPage() {
           {tab === "banks" && <BanksTab />}
           {tab === "currencies" && <CurrenciesTab />}
           {tab === "approval-rules" && (
-            <PlanGate module="approval_rules" feature="Configurable approval rules">
+            <PlanGate module="approval_rules" feature={t("Configurable approval rules")}>
               <ApprovalRulesTab />
             </PlanGate>
           )}

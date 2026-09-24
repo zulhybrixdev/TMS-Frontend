@@ -12,10 +12,11 @@ import { Dialog, ConfirmDialog } from "../ui/Dialog";
 import { Input, Label, Select } from "../ui/Input";
 import { EmptyState } from "../ui/EmptyState";
 import { Skeleton } from "../ui/Skeleton";
+import { t } from "../../i18n";
 
 export function CustomReportsSection() {
   return (
-    <PlanGate module="advanced_insights" feature="Custom Report Builder">
+    <PlanGate module="advanced_insights" feature={t("Custom Report Builder")}>
       <CustomReportsInner />
     </PlanGate>
   );
@@ -33,9 +34,9 @@ function CustomReportsInner() {
     setDownloading(`${def.id}.${format}`);
     try {
       await api.downloadCsv(`/report-definitions/${def.id}/run?format=${format}`, `${def.name}.${format}`);
-      toast.success("Report downloaded");
+      toast.success(t("Report downloaded"));
     } catch (err) {
-      toast.error("Export failed", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Export failed"), { description: err instanceof ApiError ? err.message : undefined });
     } finally {
       setDownloading(null);
     }
@@ -45,10 +46,10 @@ function CustomReportsInner() {
     <Card className="mt-5">
       <CardHeader>
         <CardTitle className="flex items-center gap-1.5">
-          <Wand2 className="h-4 w-4 text-ink-muted" /> Custom Reports
+          <Wand2 className="h-4 w-4 text-ink-muted" /> {t("Custom Reports")}
         </CardTitle>
         <Button size="sm" onClick={() => setCreateOpen(true)}>
-          <Plus className="h-3.5 w-3.5" /> New Custom Report
+          <Plus className="h-3.5 w-3.5" /> {t("New Custom Report")}
         </Button>
       </CardHeader>
       <CardBody>
@@ -57,8 +58,8 @@ function CustomReportsInner() {
         ) : !definitions || definitions.length === 0 ? (
           <EmptyState
             icon={<Wand2 className="h-5 w-5" />}
-            title="No custom reports yet"
-            description="Pick a base dataset (Payments, Transfers, ...) and choose exactly the columns you want, saved for one-click export next time."
+            title={t("No custom reports yet")}
+            description={t("Pick a base dataset (Payments, Transfers, ...) and choose exactly the columns you want, saved for one-click export next time.")}
           />
         ) : (
           <div className="space-y-2">
@@ -67,7 +68,7 @@ function CustomReportsInner() {
                 <div>
                   <p className="text-[13.5px] font-medium text-ink">{def.name}</p>
                   <p className="text-xs text-ink-muted">
-                    {def.baseReportLabel} · {def.columns.length} columns · by {def.createdBy.name}
+                    {t(def.baseReportLabel)} · {t("{n} columns · by {name}", { n: def.columns.length, name: def.createdBy.name })}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -75,7 +76,7 @@ function CustomReportsInner() {
                     <Download className="h-3.5 w-3.5" /> CSV
                   </Button>
                   <Button variant="outline" size="sm" loading={downloading === `${def.id}.xlsx`} onClick={() => download(def, "xlsx")}>
-                    <Download className="h-3.5 w-3.5" /> Excel
+                    <Download className="h-3.5 w-3.5" /> {t("Excel")}
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(def)}>
                     <Trash2 className="h-3.5 w-3.5 text-status-critical" />
@@ -100,18 +101,18 @@ function CustomReportsInner() {
       <ConfirmDialog
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        title="Delete this custom report?"
-        description={deleteTarget ? `"${deleteTarget.name}" will be permanently deleted.` : undefined}
-        confirmLabel="Delete"
+        title={t("Delete this custom report?")}
+        description={deleteTarget ? t("\"{name}\" will be permanently deleted.", { name: deleteTarget.name }) : undefined}
+        confirmLabel={t("Delete")}
         tone="danger"
         onConfirm={async () => {
           if (!deleteTarget) return;
           try {
             await api.delete(`/report-definitions/${deleteTarget.id}`);
-            toast.success("Custom report deleted");
+            toast.success(t("Custom report deleted"));
             qc.invalidateQueries({ queryKey: ["report-definitions"] });
           } catch (err) {
-            toast.error("Could not delete", { description: err instanceof ApiError ? err.message : undefined });
+            toast.error(t("Could not delete"), { description: err instanceof ApiError ? err.message : undefined });
           } finally {
             setDeleteTarget(null);
           }
@@ -143,15 +144,15 @@ function CreateReportDialog({ onClose, onSaved }: { onClose: () => void; onSaved
 
   const onSubmit = handleSubmit(async (values) => {
     if (!values.baseReport || values.columns.length === 0) {
-      toast.error("Pick a base report and at least one column");
+      toast.error(t("Pick a base report and at least one column"));
       return;
     }
     try {
       await api.post("/report-definitions", values);
-      toast.success("Custom report saved");
+      toast.success(t("Custom report saved"));
       onSaved();
     } catch (err) {
-      toast.error("Could not save custom report", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Could not save custom report"), { description: err instanceof ApiError ? err.message : undefined });
     }
   });
 
@@ -159,16 +160,16 @@ function CreateReportDialog({ onClose, onSaved }: { onClose: () => void; onSaved
     <Dialog
       open
       onClose={onClose}
-      title="New Custom Report"
-      description="Pick a base dataset, then choose exactly the columns you want."
+      title={t("New Custom Report")}
+      description={t("Pick a base dataset, then choose exactly the columns you want.")}
       size="lg"
       footer={
         <>
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button onClick={onSubmit} loading={isSubmitting}>
-            Save
+            {t("Save")}
           </Button>
         </>
       }
@@ -176,13 +177,13 @@ function CreateReportDialog({ onClose, onSaved }: { onClose: () => void; onSaved
       <form className="space-y-4" onSubmit={onSubmit}>
         <div>
           <Label htmlFor="name" required>
-            Report Name
+            {t("Report Name")}
           </Label>
-          <Input id="name" {...register("name", { required: true, minLength: 2 })} placeholder="e.g. Monthly Payment Summary for Board" />
+          <Input id="name" {...register("name", { required: true, minLength: 2 })} placeholder={t("e.g. Monthly Payment Summary for Board")} />
         </div>
         <div>
           <Label htmlFor="baseReport" required>
-            Base Dataset
+            {t("Base Dataset")}
           </Label>
           <Select
             id="baseReport"
@@ -192,7 +193,7 @@ function CreateReportDialog({ onClose, onSaved }: { onClose: () => void; onSaved
               setValue("columns", []);
             }}
           >
-            <option value="">Select a dataset</option>
+            <option value="">{t("Select a dataset")}</option>
             {availableReports?.map((r) => (
               <option key={r.key} value={r.key}>
                 {r.label}
@@ -202,7 +203,7 @@ function CreateReportDialog({ onClose, onSaved }: { onClose: () => void; onSaved
         </div>
         {baseReport && (
           <div>
-            <Label required>Columns</Label>
+            <Label required>{t("Columns")}</Label>
             <div className="flex flex-wrap gap-2">
               {columnsForBase.map((col) => (
                 <button

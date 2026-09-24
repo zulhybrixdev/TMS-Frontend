@@ -9,13 +9,14 @@ import { useAllAccounts } from "../../hooks/useReferenceData";
 import { api, ApiError } from "../../lib/api-client";
 import { todayLocal } from "../../lib/format";
 import type { ForecastEntry } from "../../lib/types";
+import { t, tk } from "../../i18n";
 
 const schema = z.object({
   accountId: z.string().optional(),
   currencyCode: z.string().length(3),
   forecastDate: z.string().min(1),
   category: z.enum(["INFLOW", "OUTFLOW"]),
-  amount: z.coerce.number().positive("Amount must be greater than zero"),
+  amount: z.coerce.number().positive(tk("Amount must be greater than zero")),
   confidence: z.enum(["HIGH", "MEDIUM", "LOW"]),
   description: z.string().optional(),
 });
@@ -33,11 +34,11 @@ export function ForecastEntryDialog({ open, onClose, onSaved }: { open: boolean;
   const onSubmit = async (values: FormValues) => {
     try {
       const entry = await api.post<ForecastEntry>("/forecasts", { ...values, accountId: values.accountId || undefined });
-      toast.success("Forecast entry added");
+      toast.success(t("Forecast entry added"));
       reset();
       onSaved(entry);
     } catch (err) {
-      toast.error("Could not save forecast entry", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Could not save forecast entry"), { description: err instanceof ApiError ? err.message : undefined });
     }
   };
 
@@ -45,15 +46,15 @@ export function ForecastEntryDialog({ open, onClose, onSaved }: { open: boolean;
     <Dialog
       open={open}
       onClose={onClose}
-      title="Add Forecast Entry"
-      description="Manually project a known future inflow or outflow (e.g. tax payment, expected receivable)."
+      title={t("Add Forecast Entry")}
+      description={t("Manually project a known future inflow or outflow (e.g. tax payment, expected receivable).")}
       footer={
         <>
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button onClick={handleSubmit(onSubmit)} loading={isSubmitting}>
-            Save
+            {t("Save")}
           </Button>
         </>
       }
@@ -62,28 +63,28 @@ export function ForecastEntryDialog({ open, onClose, onSaved }: { open: boolean;
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label htmlFor="category" required>
-              Category
+              {t("Category")}
             </Label>
             <Select id="category" {...register("category")}>
-              <option value="INFLOW">Inflow</option>
-              <option value="OUTFLOW">Outflow</option>
+              <option value="INFLOW">{t("Inflow")}</option>
+              <option value="OUTFLOW">{t("Outflow")}</option>
             </Select>
           </div>
           <div>
             <Label htmlFor="confidence" required>
-              Confidence
+              {t("Confidence")}
             </Label>
             <Select id="confidence" {...register("confidence")}>
-              <option value="HIGH">High</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="LOW">Low</option>
+              <option value="HIGH">{t("High")}</option>
+              <option value="MEDIUM">{t("Medium")}</option>
+              <option value="LOW">{t("Low")}</option>
             </Select>
           </div>
         </div>
         <div>
-          <Label htmlFor="accountId">Account (optional — leave blank for company-wide)</Label>
+          <Label htmlFor="accountId">{t("Account (optional — leave blank for company-wide)")}</Label>
           <Select id="accountId" {...register("accountId")}>
-            <option value="">Company-wide</option>
+            <option value="">{t("Company-wide")}</option>
             {accounts?.items.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.accountName} ({a.bankName})
@@ -94,24 +95,24 @@ export function ForecastEntryDialog({ open, onClose, onSaved }: { open: boolean;
         <div className="grid grid-cols-3 gap-3">
           <div>
             <Label htmlFor="amount" required>
-              Amount
+              {t("Amount")}
             </Label>
             <Input id="amount" type="number" step="0.01" {...register("amount")} error={!!errors.amount} />
             <ErrorText>{errors.amount?.message}</ErrorText>
           </div>
           <div>
-            <Label htmlFor="currencyCode">Currency</Label>
+            <Label htmlFor="currencyCode">{t("Currency")}</Label>
             <Input id="currencyCode" {...register("currencyCode")} />
           </div>
           <div>
             <Label htmlFor="forecastDate" required>
-              Date
+              {t("Date")}
             </Label>
             <Input id="forecastDate" type="date" {...register("forecastDate")} />
           </div>
         </div>
         <div>
-          <Label htmlFor="description">Description</Label>
+          <Label htmlFor="description">{t("Description")}</Label>
           <Textarea id="description" rows={2} {...register("description")} />
         </div>
       </form>

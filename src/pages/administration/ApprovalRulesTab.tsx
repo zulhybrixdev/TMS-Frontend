@@ -13,6 +13,7 @@ import { Input, Label, Select } from "../../components/ui/Input";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { formatMoney } from "../../lib/format";
+import { t, tEnum } from "../../i18n";
 
 export function ApprovalRulesTab() {
   const qc = useQueryClient();
@@ -22,21 +23,21 @@ export function ApprovalRulesTab() {
   const [deleteTarget, setDeleteTarget] = useState<ApprovalRule | null>(null);
 
   const columns: Column<ApprovalRule>[] = [
-    { key: "entityType", header: "Applies To", render: (r) => <Badge tone="neutral">{r.entityType}</Badge> },
+    { key: "entityType", header: t("Applies To"), render: (r) => <Badge tone="neutral">{tEnum(r.entityType)}</Badge> },
     {
       key: "range",
-      header: "Amount Range",
+      header: t("Amount Range"),
       render: (r) => (
         <span className="tabular-nums">
           {formatMoney(r.minAmount, r.currencyCode ?? "MYR")} – {r.maxAmount ? formatMoney(r.maxAmount, r.currencyCode ?? "MYR") : "∞"}
         </span>
       ),
     },
-    { key: "currencyCode", header: "Currency", render: (r) => r.currencyCode ?? "Any" },
-    { key: "department", header: "Department", render: (r) => r.department ?? "Any" },
-    { key: "requiredLevels", header: "Levels", render: (r) => r.requiredLevels },
-    { key: "roles", header: "Required Approvers", render: (r) => <span className="text-ink-secondary">{r.requiredRoleLevel1}{r.requiredRoleLevel2 ? ` → ${r.requiredRoleLevel2}` : ""}</span> },
-    { key: "isActive", header: "Active", render: (r) => (r.isActive ? <Badge tone="good">Active</Badge> : <Badge tone="neutral">Inactive</Badge>) },
+    { key: "currencyCode", header: t("Currency"), render: (r) => r.currencyCode ?? "Any" },
+    { key: "department", header: t("Department"), render: (r) => r.department ?? "Any" },
+    { key: "requiredLevels", header: t("Levels"), render: (r) => r.requiredLevels },
+    { key: "roles", header: t("Required Approvers"), render: (r) => <span className="text-ink-secondary">{r.requiredRoleLevel1}{r.requiredRoleLevel2 ? ` → ${r.requiredRoleLevel2}` : ""}</span> },
+    { key: "isActive", header: t("Active"), render: (r) => (r.isActive ? <Badge tone="good">{t("Active")}</Badge> : <Badge tone="neutral">{t("Inactive")}</Badge>) },
     {
       key: "actions",
       header: "",
@@ -54,17 +55,16 @@ export function ApprovalRulesTab() {
   return (
     <div>
       <p className="mb-4 text-[13px] text-ink-secondary">
-        Approval levels are resolved by matching the payment/transfer's entity type, currency, and amount against these rules (highest priority, most specific first). If no rule matches, a single
-        Finance Checker approval is required by default.
+        {t("Approval levels are resolved by matching the payment/transfer's entity type, currency, and amount against these rules (highest priority, most specific first). If no rule matches, a single Finance Checker approval is required by default.")}
       </p>
       <div className="mb-4 flex justify-end">
         <Button onClick={() => setOpen(true)}>
-          <Plus className="h-4 w-4" /> Add Rule
+          <Plus className="h-4 w-4" /> {t("Add Rule")}
         </Button>
       </div>
 
       {!rules || rules.length === 0 ? (
-        <EmptyState title="No approval rules configured" description="The system default of a single Finance Checker approval will apply to everything." />
+        <EmptyState title={t("No approval rules configured")} description={t("The system default of a single Finance Checker approval will apply to everything.")} />
       ) : (
         <DataTable columns={columns} rows={rules} rowKey={(r) => r.id} />
       )}
@@ -87,16 +87,16 @@ export function ApprovalRulesTab() {
           if (!deleteTarget) return;
           try {
             await api.delete(`/approval-rules/${deleteTarget.id}`);
-            toast.success("Rule removed");
+            toast.success(t("Rule removed"));
             qc.invalidateQueries({ queryKey: ["approval-rules"] });
           } catch (err) {
-            toast.error("Could not remove rule", { description: err instanceof ApiError ? err.message : undefined });
+            toast.error(t("Could not remove rule"), { description: err instanceof ApiError ? err.message : undefined });
           } finally {
             setDeleteTarget(null);
           }
         }}
-        title="Remove this approval rule?"
-        confirmLabel="Remove"
+        title={t("Remove this approval rule?")}
+        confirmLabel={t("Remove")}
         tone="danger"
       />
     </div>
@@ -122,11 +122,11 @@ function RuleFormDialog({ roles, onClose, onSaved }: { roles: Role[]; onClose: (
         priority: Number(values.priority),
         requiredRoleLevel2: Number(values.requiredLevels) === 2 ? values.requiredRoleLevel2 : undefined,
       });
-      toast.success("Approval rule created");
+      toast.success(t("Approval rule created"));
       if (saved.departmentWarning) toast.warning(saved.departmentWarning);
       onSaved();
     } catch (err) {
-      toast.error("Could not create rule", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Could not create rule"), { description: err instanceof ApiError ? err.message : undefined });
     }
   });
 
@@ -134,15 +134,15 @@ function RuleFormDialog({ roles, onClose, onSaved }: { roles: Role[]; onClose: (
     <Dialog
       open
       onClose={onClose}
-      title="Add Approval Rule"
+      title={t("Add Approval Rule")}
       size="lg"
       footer={
         <>
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button onClick={onSubmit} loading={isSubmitting}>
-            Save
+            {t("Save")}
           </Button>
         </>
       }
@@ -151,21 +151,21 @@ function RuleFormDialog({ roles, onClose, onSaved }: { roles: Role[]; onClose: (
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label htmlFor="entityType" required>
-              Applies To
+              {t("Applies To")}
             </Label>
             <Select id="entityType" {...register("entityType")}>
-              <option value="PAYMENT">Payment</option>
-              <option value="TRANSFER">Transfer</option>
+              <option value="PAYMENT">{t("Payment")}</option>
+              <option value="TRANSFER">{t("Transfer")}</option>
             </Select>
           </div>
           <div>
-            <Label htmlFor="currencyCode">Currency (optional)</Label>
-            <Input id="currencyCode" placeholder="Any" {...register("currencyCode")} />
+            <Label htmlFor="currencyCode">{t("Currency (optional)")}</Label>
+            <Input id="currencyCode" placeholder={t("Any")} {...register("currencyCode")} />
           </div>
         </div>
         <div>
-          <Label htmlFor="department">Department / cost center (optional)</Label>
-          <Input id="department" list="department-options" placeholder="Any - matches requester's department" {...register("department")} />
+          <Label htmlFor="department">{t("Department / cost center (optional)")}</Label>
+          <Input id="department" list="department-options" placeholder={t("Any - matches requester's department")} {...register("department")} />
           <datalist id="department-options">
             {departments?.map((d) => (
               <option key={d} value={d} />
@@ -175,34 +175,34 @@ function RuleFormDialog({ roles, onClose, onSaved }: { roles: Role[]; onClose: (
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label htmlFor="minAmount" required>
-              Minimum Amount
+              {t("Minimum Amount")}
             </Label>
             <Input id="minAmount" type="number" step="0.01" {...register("minAmount")} />
           </div>
           <div>
-            <Label htmlFor="maxAmount">Maximum Amount (optional)</Label>
-            <Input id="maxAmount" type="number" step="0.01" placeholder="No limit" {...register("maxAmount")} />
+            <Label htmlFor="maxAmount">{t("Maximum Amount (optional)")}</Label>
+            <Input id="maxAmount" type="number" step="0.01" placeholder={t("No limit")} {...register("maxAmount")} />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label htmlFor="requiredLevels" required>
-              Required Approval Levels
+              {t("Required Approval Levels")}
             </Label>
             <Select id="requiredLevels" {...register("requiredLevels")}>
-              <option value={1}>1 Level</option>
-              <option value={2}>2 Levels</option>
+              <option value={1}>{t("1 Level")}</option>
+              <option value={2}>{t("2 Levels")}</option>
             </Select>
           </div>
           <div>
-            <Label htmlFor="priority">Priority (higher wins on overlap)</Label>
+            <Label htmlFor="priority">{t("Priority (higher wins on overlap)")}</Label>
             <Input id="priority" type="number" {...register("priority")} />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label htmlFor="requiredRoleLevel1" required>
-              Level 1 Approver Role
+              {t("Level 1 Approver Role")}
             </Label>
             <Select id="requiredRoleLevel1" {...register("requiredRoleLevel1")}>
               {roles.map((r) => (
@@ -215,7 +215,7 @@ function RuleFormDialog({ roles, onClose, onSaved }: { roles: Role[]; onClose: (
           {requiredLevels === 2 && (
             <div>
               <Label htmlFor="requiredRoleLevel2" required>
-                Level 2 Approver Role
+                {t("Level 2 Approver Role")}
               </Label>
               <Select id="requiredRoleLevel2" {...register("requiredRoleLevel2")}>
                 {roles.map((r) => (

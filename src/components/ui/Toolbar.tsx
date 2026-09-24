@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import { ReactNode } from "react";
 import { Search } from "lucide-react";
 import { Input } from "./Input";
@@ -23,7 +24,7 @@ export function Toolbar({
         {!hideSearch && (
           <div className="relative">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-muted" />
-            <Input value={search} onChange={(e) => onSearch(e.target.value)} placeholder={placeholder} className="h-9 w-56 pl-8" />
+            <Input value={search} onChange={(e) => onSearch(e.target.value)} placeholder={t(placeholder)} className="h-9 w-56 pl-8" />
           </div>
         )}
         {filters}

@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import clsx from "clsx";
 import { MoreVertical } from "lucide-react";
+import { t } from "../../i18n";
 
 export interface DropdownMenuItem {
   label: string;
@@ -50,7 +51,7 @@ export function DropdownMenu({ items, align = "end" }: { items: DropdownMenuItem
       <button
         ref={triggerRef}
         onClick={toggle}
-        aria-label="More actions"
+        aria-label={t("More actions")}
         className={clsx("rounded-md p-1.5 text-ink-muted transition-colors hover:bg-plane hover:text-ink", open && "bg-plane text-ink")}
       >
         <MoreVertical className="h-4 w-4" />

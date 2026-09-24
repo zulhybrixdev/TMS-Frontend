@@ -21,6 +21,7 @@ import { api, ApiError } from "../lib/api-client";
 import { dateOnly, formatDate, formatMoney, todayLocal } from "../lib/format";
 import type { IncomingTransaction } from "../lib/types";
 import { IncomingFormDialog } from "../components/incoming/IncomingFormDialog";
+import { t } from "../i18n";
 
 export default function IncomingPage() {
   const { hasPermission } = useAuth();
@@ -39,13 +40,13 @@ export default function IncomingPage() {
     setBusy(true);
     try {
       await api.post(`/incoming-transactions/${rescheduling.id}/reschedule`, { valueDate, reason: reason || undefined });
-      toast.success("Due date updated");
+      toast.success(t("Due date updated"));
       qc.invalidateQueries({ queryKey: ["incoming"] });
       qc.invalidateQueries({ queryKey: ["forecast-projection"] });
       qc.invalidateQueries({ queryKey: ["treasury-desk"] });
       setRescheduling(null);
     } catch (err) {
-      toast.error("Could not change the date", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Could not change the date"), { description: err instanceof ApiError ? err.message : undefined });
     } finally {
       setBusy(false);
     }
@@ -56,7 +57,7 @@ export default function IncomingPage() {
     setBusy(true);
     try {
       await api.post(`/incoming-transactions/${pendingAction.row.id}/${pendingAction.action}`, pendingAction.action === "receive" ? { floatDays: receiveFloat } : undefined);
-      toast.success(`Marked as ${pendingAction.action === "receive" ? "received" : pendingAction.action === "reconcile" ? "reconciled" : "cancelled"}`);
+      toast.success(pendingAction.action === "receive" ? t("Marked as received") : pendingAction.action === "reconcile" ? t("Marked as reconciled") : t("Marked as cancelled"));
       qc.invalidateQueries({ queryKey: ["incoming"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       qc.invalidateQueries({ queryKey: ["bank-accounts"] });
@@ -64,7 +65,7 @@ export default function IncomingPage() {
       qc.invalidateQueries({ queryKey: ["treasury-desk"] });
       setPendingAction(null);
     } catch (err) {
-      toast.error("Action failed", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Action failed"), { description: err instanceof ApiError ? err.message : undefined });
     } finally {
       setBusy(false);
     }
@@ -73,31 +74,31 @@ export default function IncomingPage() {
   const columns: Column<IncomingTransaction>[] = [
     {
       key: "reference",
-      header: "Reference",
+      header: t("Reference"),
       render: (r) => (
         <div>
           <p className="font-medium text-ink">{r.reference}</p>
-          {r.invoiceNumber && <p className="text-xs text-ink-muted">Inv. {r.invoiceNumber}</p>}
+          {r.invoiceNumber && <p className="text-xs text-ink-muted">{t("Inv.")} {r.invoiceNumber}</p>}
         </div>
       ),
     },
-    { key: "sourceName", header: "Source", render: (r) => <span className="min-w-[8rem] inline-block">{r.sourceName}</span> },
-    { key: "destinationAccountName", header: "Destination Account", render: (r) => <span className="text-ink-secondary">{r.destinationAccountName}</span> },
-    { key: "amount", header: "Amount", sortable: true, align: "right", render: (r) => <span className="tabular-nums font-medium">{formatMoney(r.amount, r.currencyCode)}</span> },
-    { key: "valueDate", header: "Due Date", sortable: true, render: (r) => formatDate(r.valueDate) },
+    { key: "sourceName", header: t("Source"), render: (r) => <span className="min-w-[8rem] inline-block">{r.sourceName}</span> },
+    { key: "destinationAccountName", header: t("Destination Account"), render: (r) => <span className="text-ink-secondary">{r.destinationAccountName}</span> },
+    { key: "amount", header: t("Amount"), sortable: true, align: "right", render: (r) => <span className="tabular-nums font-medium">{formatMoney(r.amount, r.currencyCode)}</span> },
+    { key: "valueDate", header: t("Due Date"), sortable: true, render: (r) => formatDate(r.valueDate) },
     {
       key: "float",
-      header: "Float",
+      header: t("Float"),
       render: (r) =>
         r.clearingDate && dateOnly(r.clearingDate) > todayLocal() ? (
-          <span className="whitespace-nowrap text-xs text-status-warning">Clears {formatDate(r.clearingDate, { day: "2-digit", month: "short" })}</span>
+          <span className="whitespace-nowrap text-xs text-status-warning">{t("Clears")} {formatDate(r.clearingDate, { day: "2-digit", month: "short" })}</span>
         ) : r.floatDays > 0 && r.status === "EXPECTED" ? (
-          <span className="whitespace-nowrap text-xs text-ink-secondary">Day {r.floatDays}</span>
+          <span className="whitespace-nowrap text-xs text-ink-secondary">{t("Day")} {r.floatDays}</span>
         ) : (
           <span className="text-ink-muted">—</span>
         ),
     },
-    { key: "status", header: "Status", render: (r) => <StatusBadge status={r.status} /> },
+    { key: "status", header: t("Status"), render: (r) => <StatusBadge status={r.status} /> },
     ...(canManage
       ? [
           {
@@ -107,7 +108,7 @@ export default function IncomingPage() {
             render: (r: IncomingTransaction) => (
               <div className="flex justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                 {r.status === "EXPECTED" && (
-                  <Button size="sm" variant="outline" onClick={() => setRescheduling(r)} aria-label="Adjust due date" title="Adjust due date">
+                  <Button size="sm" variant="outline" onClick={() => setRescheduling(r)} aria-label={t("Adjust due date")} title={t("Adjust due date")}>
                     <CalendarClock className="h-3.5 w-3.5" />
                   </Button>
                 )}
@@ -120,12 +121,12 @@ export default function IncomingPage() {
                       setPendingAction({ row: r, action: "receive" });
                     }}
                   >
-                    <CheckCircle2 className="h-3.5 w-3.5" /> Receive
+                    <CheckCircle2 className="h-3.5 w-3.5" /> {t("Receive")}
                   </Button>
                 )}
                 {r.status === "RECEIVED" && (
                   <Button size="sm" variant="outline" onClick={() => setPendingAction({ row: r, action: "reconcile" })}>
-                    <RefreshCcw className="h-3.5 w-3.5" /> Reconcile
+                    <RefreshCcw className="h-3.5 w-3.5" /> {t("Reconcile")}
                   </Button>
                 )}
               </div>
@@ -138,12 +139,12 @@ export default function IncomingPage() {
   return (
     <>
       <PageHeader
-        title="Incoming Transactions"
-        description="Expected and received incoming payments across all company accounts."
+        title={t("Incoming Transactions")}
+        description={t("Expected and received incoming payments across all company accounts.")}
         actions={
           canManage && (
             <Button onClick={() => setCreateOpen(true)}>
-              <Plus className="h-4 w-4" /> Record Incoming
+              <Plus className="h-4 w-4" /> {t("Record Incoming")}
             </Button>
           )
         }
@@ -153,14 +154,14 @@ export default function IncomingPage() {
         <Toolbar
           search={list.search}
           onSearch={list.setSearch}
-          placeholder="Search reference or source..."
+          placeholder={t("Search reference or source...")}
           filters={
             <Select className="h-9 w-44" value={list.filters.status ?? ""} onChange={(e) => list.setFilter("status", e.target.value)}>
-              <option value="">All statuses</option>
-              <option value="EXPECTED">Expected</option>
-              <option value="RECEIVED">Received</option>
-              <option value="RECONCILED">Reconciled</option>
-              <option value="CANCELLED">Cancelled</option>
+              <option value="">{t("All statuses")}</option>
+              <option value="EXPECTED">{t("Expected")}</option>
+              <option value="RECEIVED">{t("Received")}</option>
+              <option value="RECONCILED">{t("Reconciled")}</option>
+              <option value="CANCELLED">{t("Cancelled")}</option>
             </Select>
           }
         />
@@ -170,7 +171,7 @@ export default function IncomingPage() {
         ) : list.isError ? (
           <ErrorState message={(list.error as Error)?.message} onRetry={list.refetch} />
         ) : list.data.length === 0 ? (
-          <EmptyState icon={<ArrowDownLeft className="h-5 w-5" />} title="No incoming transactions found" />
+          <EmptyState icon={<ArrowDownLeft className="h-5 w-5" />} title={t("No incoming transactions found")} />
         ) : (
           <DataTable columns={columns} rows={list.data} rowKey={(r) => r.id} sortBy={list.sortBy} sortDir={list.sortDir} onSort={list.toggleSort} />
         )}
@@ -191,36 +192,36 @@ export default function IncomingPage() {
         open={pendingAction?.action === "reconcile"}
         onClose={() => setPendingAction(null)}
         onConfirm={runAction}
-        title="Mark as reconciled?"
-        description="This confirms the incoming transaction has been matched against the bank statement."
-        confirmLabel="Confirm"
+        title={t("Mark as reconciled?")}
+        description={t("This confirms the incoming transaction has been matched against the bank statement.")}
+        confirmLabel={t("Confirm")}
         loading={busy}
       />
 
       <Dialog
         open={pendingAction?.action === "receive"}
         onClose={() => setPendingAction(null)}
-        title="Mark as received?"
-        description="This posts a ledger entry and immediately increases the destination account's balance."
+        title={t("Mark as received?")}
+        description={t("This posts a ledger entry and immediately increases the destination account's balance.")}
         size="sm"
         footer={
           <>
             <Button variant="outline" onClick={() => setPendingAction(null)} disabled={busy}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button onClick={runAction} loading={busy}>
-              Confirm
+              {t("Confirm")}
             </Button>
           </>
         }
       >
-        <Label htmlFor="receive-float">How do the funds clear?</Label>
+        <Label htmlFor="receive-float">{t("How do the funds clear?")}</Label>
         <Select id="receive-float" value={receiveFloat} onChange={(e) => setReceiveFloat(Number(e.target.value))}>
-          <option value={0}>Cleared - available now</option>
-          <option value={1}>Day 1 float - usable from the next business day</option>
-          <option value={2}>Day 2 float - usable two business days on</option>
+          <option value={0}>{t("Cleared - available now")}</option>
+          <option value={1}>{t("Day 1 float - usable from the next business day")}</option>
+          <option value={2}>{t("Day 2 float - usable two business days on")}</option>
         </Select>
-        <p className="mt-2 text-[12px] text-ink-muted">The balance goes up now either way; float is shown separately and kept out of available cash until it clears.</p>
+        <p className="mt-2 text-[12px] text-ink-muted">{t("The balance goes up now either way; float is shown separately and kept out of available cash until it clears.")}</p>
       </Dialog>
 
       <RescheduleDialog

@@ -9,6 +9,9 @@ import { ImpersonationBanner } from "./ImpersonationBanner";
 import { CommandPalette } from "./CommandPalette";
 import { NAV_ITEMS } from "./nav-config";
 import { useAuth } from "../../lib/auth-context";
+import { t } from "../../i18n";
+import { LegalLinks } from "../LegalLinks";
+import { AnnouncementBanner } from "../AnnouncementBanner";
 
 export function AppShell() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -44,7 +47,7 @@ export function AppShell() {
               className="ledger-grid absolute inset-y-0 left-0 w-72 bg-chrome p-4 shadow-popover"
             >
               <div className="mb-4 flex items-center justify-between">
-                <p className="font-display text-sm font-semibold text-chrome-ink">Menu</p>
+                <p className="font-display text-sm font-semibold text-chrome-ink">{t("Menu")}</p>
                 <button onClick={() => setMobileNavOpen(false)} className="rounded-md p-1.5 text-chrome-muted hover:bg-white/5">
                   <X className="h-4 w-4" />
                 </button>
@@ -61,7 +64,7 @@ export function AppShell() {
                     }
                   >
                     <item.icon className="h-[17px] w-[17px]" />
-                    {item.label}
+                    {t(item.label)}
                   </NavLink>
                 ))}
               </nav>
@@ -71,6 +74,7 @@ export function AppShell() {
       </AnimatePresence>
 
       <div className="flex min-w-0 flex-1 flex-col">
+        <AnnouncementBanner />
         <ImpersonationBanner />
         <Topbar onMenu={() => setMobileNavOpen(true)} onSearch={() => setPaletteOpen(true)} />
         <main className="flex-1 overflow-y-auto">
@@ -87,6 +91,9 @@ export function AppShell() {
             </motion.div>
           </AnimatePresence>
         </main>
+        <footer className="shrink-0 border-t border-border bg-surface-raised px-4 py-2">
+          <LegalLinks />
+        </footer>
       </div>
 
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />

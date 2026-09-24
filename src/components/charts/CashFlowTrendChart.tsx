@@ -1,6 +1,7 @@
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ChartTooltip } from "./ChartTooltip";
 import { formatCompact, formatDate } from "../../lib/format";
+import { t } from "../../i18n";
 
 export function CashFlowTrendChart({ data }: { data: { date: string; closingBalance: number }[] }) {
   return (
@@ -23,7 +24,7 @@ export function CashFlowTrendChart({ data }: { data: { date: string; closingBala
         />
         <YAxis tickFormatter={(v) => formatCompact(v)} tick={{ fontSize: 11, fill: "var(--ink-muted)" }} axisLine={false} tickLine={false} width={56} />
         <Tooltip content={<ChartTooltip labelFormatter={(l) => formatDate(l)} />} cursor={{ stroke: "var(--baseline)", strokeDasharray: 3 }} />
-        <Area type="monotone" dataKey="closingBalance" name="Cash Balance" stroke="var(--series-1)" strokeWidth={2} fill="url(#trendFill)" activeDot={{ r: 4 }} />
+        <Area type="monotone" dataKey="closingBalance" name={t("Cash Balance")} stroke="var(--series-1)" strokeWidth={2} fill="url(#trendFill)" activeDot={{ r: 4 }} />
       </AreaChart>
     </ResponsiveContainer>
   );

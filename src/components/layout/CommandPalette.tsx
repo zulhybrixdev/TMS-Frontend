@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { LogOut, Search, CornerDownLeft } from "lucide-react";
 import { NAV_ITEMS } from "./nav-config";
 import { useAuth } from "../../lib/auth-context";
+import { t } from "../../i18n";
 
 export function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const navigate = useNavigate();
@@ -52,32 +53,32 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                 <Search className="h-4 w-4 shrink-0 text-chrome-muted" />
                 <Command.Input
                   autoFocus
-                  placeholder="Jump to a screen, or search an action..."
+                  placeholder={t("Jump to a screen, or search an action...")}
                   className="w-full bg-transparent py-3.5 text-[14px] text-chrome-ink placeholder:text-chrome-muted focus:outline-none"
                 />
                 <kbd className="rounded border border-chrome-border px-1.5 py-0.5 text-[10px] text-chrome-muted">ESC</kbd>
               </div>
               <Command.List className="max-h-80 overflow-y-auto p-2">
-                <Command.Empty className="px-3 py-6 text-center text-[13px] text-chrome-muted">No matches found.</Command.Empty>
+                <Command.Empty className="px-3 py-6 text-center text-[13px] text-chrome-muted">{t("No matches found.")}</Command.Empty>
 
-                <Command.Group heading="Navigate" className="px-2 pb-1 pt-2 text-[10.5px] font-medium uppercase tracking-wider text-chrome-muted [&_[cmdk-group-heading]]:px-1 [&_[cmdk-group-heading]]:pb-1.5">
+                <Command.Group heading={t("Navigate")} className="px-2 pb-1 pt-2 text-[10.5px] font-medium uppercase tracking-wider text-chrome-muted [&_[cmdk-group-heading]]:px-1 [&_[cmdk-group-heading]]:pb-1.5">
                   {items.map((item) => (
                     <Command.Item
                       key={item.to}
-                      value={item.label}
+                      value={t(item.label)}
                       onSelect={() => go(item.to)}
                       className="group flex cursor-pointer items-center justify-between rounded-lg px-3 py-2.5 text-[13.5px] text-chrome-ink data-[selected=true]:bg-chrome-active"
                     >
                       <span className="flex items-center gap-2.5">
                         <item.icon className="h-4 w-4 text-chrome-muted group-data-[selected=true]:text-chrome-accent" />
-                        {item.label}
+                        {t(item.label)}
                       </span>
                       <CornerDownLeft className="h-3.5 w-3.5 text-chrome-muted opacity-0 group-data-[selected=true]:opacity-100" />
                     </Command.Item>
                   ))}
                 </Command.Group>
 
-                <Command.Group heading="Session" className="px-2 pb-1 pt-2 text-[10.5px] font-medium uppercase tracking-wider text-chrome-muted [&_[cmdk-group-heading]]:px-1 [&_[cmdk-group-heading]]:pb-1.5">
+                <Command.Group heading={t("Session")} className="px-2 pb-1 pt-2 text-[10.5px] font-medium uppercase tracking-wider text-chrome-muted [&_[cmdk-group-heading]]:px-1 [&_[cmdk-group-heading]]:pb-1.5">
                   <Command.Item
                     value="Sign out"
                     onSelect={() => {
@@ -87,7 +88,7 @@ export function CommandPalette({ open, onClose }: { open: boolean; onClose: () =
                     className="group flex cursor-pointer items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13.5px] text-status-critical data-[selected=true]:bg-chrome-active"
                   >
                     <LogOut className="h-4 w-4" />
-                    Sign out
+                    {t("Sign out")}
                   </Command.Item>
                 </Command.Group>
               </Command.List>

@@ -18,6 +18,8 @@ import { OnboardingChecklist } from "../components/dashboard/OnboardingChecklist
 import { CustomizeDashboardButton } from "../components/dashboard/CustomizeDashboardButton";
 import { useHasModule } from "../hooks/useSubscription";
 import { useDashboardWidgetPrefs } from "../hooks/useDashboardWidgetPrefs";
+import { t } from "../i18n";
+import { tServer } from "../i18n/server-messages";
 
 const alertIcon = { critical: XCircle, warning: AlertTriangle, info: Info } as const;
 const alertTone = { critical: "text-status-critical bg-status-critical-soft", warning: "text-status-warning bg-status-warning-soft", info: "text-brand bg-brand-soft" } as const;
@@ -34,7 +36,7 @@ export default function DashboardPage() {
   if (isError) {
     return (
       <>
-        <PageHeader title="Dashboard" description="Treasury overview" />
+        <PageHeader title={t("Dashboard")} description={t("Treasury overview")} />
         <Card>
           <ErrorState message={(error as Error)?.message} onRetry={() => refetch()} />
         </Card>
@@ -44,7 +46,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <PageHeader title={`Good day, ${user?.name.split(" ")[0]}`} description="Here's where your company's cash stands today." actions={<CustomizeDashboardButton />} />
+      <PageHeader title={t("Good day, {name}", { name: user?.name.split(" ")[0] })} description={t("Here's where your company's cash stands today.")} actions={<CustomizeDashboardButton />} />
 
       <OnboardingChecklist />
 
@@ -53,21 +55,21 @@ export default function DashboardPage() {
           Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)
         ) : (
           <>
-            <StatCard label="Total Cash" value={data.totals.totalCash} format={(n) => formatMoney(n)} icon={Wallet} spark={data.cashFlowTrend.map((p) => p.closingBalance)} />
-            <StatCard label="Available Cash" value={data.totals.availableCash} format={(n) => formatMoney(n)} icon={Wallet} spark={data.cashFlowTrend.map((p) => p.closingBalance * 0.98)} />
+            <StatCard label={t("Total Cash")} value={data.totals.totalCash} format={(n) => formatMoney(n)} icon={Wallet} spark={data.cashFlowTrend.map((p) => p.closingBalance)} />
+            <StatCard label={t("Available Cash")} value={data.totals.availableCash} format={(n) => formatMoney(n)} icon={Wallet} spark={data.cashFlowTrend.map((p) => p.closingBalance * 0.98)} />
             <StatCard
-              label="Shortfall / Excess"
+              label={t("Shortfall / Excess")}
               value={data.totals.totalShortfall > 0 ? -data.totals.totalShortfall : data.totals.totalExcess}
               format={(n) => formatMoney(Math.abs(n))}
               tone={data.totals.totalShortfall > 0 ? "critical" : "default"}
               icon={data.totals.totalShortfall > 0 ? AlertTriangle : TrendingUp}
               footer={
                 <span className="text-xs text-ink-muted">
-                  {data.totals.totalShortfall > 0 ? `${data.accountsInShortfall} account(s) below minimum` : "All accounts above minimum"}
+                  {data.totals.totalShortfall > 0 ? t("{n} account(s) below minimum", { n: data.accountsInShortfall }) : t("All accounts above minimum")}
                 </span>
               }
             />
-            <StatCard label="Pending Approvals" value={data.pendingApprovalsCount} icon={ClipboardCheck} footer={<Link to="/approvals" className="text-xs font-medium text-brand hover:underline">Review now →</Link>} />
+            <StatCard label={t("Pending Approvals")} value={data.pendingApprovalsCount} icon={ClipboardCheck} footer={<Link to="/approvals" className="text-xs font-medium text-brand hover:underline">{t("Review now →")}</Link>} />
           </>
         )}
       </div>
@@ -77,10 +79,10 @@ export default function DashboardPage() {
           Array.from({ length: 4 }).map((_, i) => <SkeletonStatCard key={i} />)
         ) : (
           <>
-            <StatCard label="Incoming (30d)" value={data.incoming30d} format={(n) => formatMoney(n)} icon={ArrowUpRight} />
-            <StatCard label="Outgoing (30d)" value={data.outgoing30d} format={(n) => formatMoney(n)} icon={ArrowLeftRight} />
-            <StatCard label="Projected Balance (30d)" value={data.projectedBalanceEnd} format={(n) => formatMoney(n)} icon={TrendingUp} />
-            <StatCard label="Minimum Required" value={data.totals.minimumRequired} format={(n) => formatMoney(n)} icon={Wallet} />
+            <StatCard label={t("Incoming (30d)")} value={data.incoming30d} format={(n) => formatMoney(n)} icon={ArrowUpRight} />
+            <StatCard label={t("Outgoing (30d)")} value={data.outgoing30d} format={(n) => formatMoney(n)} icon={ArrowLeftRight} />
+            <StatCard label={t("Projected Balance (30d)")} value={data.projectedBalanceEnd} format={(n) => formatMoney(n)} icon={TrendingUp} />
+            <StatCard label={t("Minimum Required")} value={data.totals.minimumRequired} format={(n) => formatMoney(n)} icon={Wallet} />
           </>
         )}
       </div>
@@ -90,16 +92,16 @@ export default function DashboardPage() {
           {isVisible("cashFlowTrend") && (
             <Card className="xl:col-span-2">
               <CardHeader>
-                <CardTitle>Cash-Flow Trend · Last 30 Days</CardTitle>
+                <CardTitle>{t("Cash-Flow Trend · Last 30 Days")}</CardTitle>
               </CardHeader>
-              <CardBody>{isLoading || !data ? <Skeleton className="h-[260px] w-full" /> : data.cashFlowTrend.length ? <CashFlowTrendChart data={data.cashFlowTrend} /> : <EmptyState title="No balance history yet" />}</CardBody>
+              <CardBody>{isLoading || !data ? <Skeleton className="h-[260px] w-full" /> : data.cashFlowTrend.length ? <CashFlowTrendChart data={data.cashFlowTrend} /> : <EmptyState title={t("No balance history yet")} />}</CardBody>
             </Card>
           )}
 
           {isVisible("cashByBank") && (
             <Card>
               <CardHeader>
-                <CardTitle>Cash by Bank</CardTitle>
+                <CardTitle>{t("Cash by Bank")}</CardTitle>
               </CardHeader>
               <CardBody>{isLoading || !data ? <Skeleton className="h-[220px] w-full" /> : <BreakdownBarChart data={data.cashByBank} />}</CardBody>
             </Card>
@@ -112,9 +114,9 @@ export default function DashboardPage() {
           {isVisible("forecast") && (
             <Card className="xl:col-span-2">
               <CardHeader>
-                <CardTitle>30-Day Forecast</CardTitle>
+                <CardTitle>{t("30-Day Forecast")}</CardTitle>
                 <Link to="/forecast" className="text-xs font-medium text-brand hover:underline">
-                  Full forecast →
+                  {t("Full forecast →")}
                 </Link>
               </CardHeader>
               <CardBody>{isLoading || !data ? <Skeleton className="h-[300px] w-full" /> : <ForecastChart data={data.forecast30d} />}</CardBody>
@@ -124,13 +126,13 @@ export default function DashboardPage() {
           {isVisible("alerts") && (
             <Card>
               <CardHeader>
-                <CardTitle>Alerts</CardTitle>
+                <CardTitle>{t("Alerts")}</CardTitle>
               </CardHeader>
               <CardBody className="space-y-2.5 p-3">
                 {isLoading || !data ? (
                   <Skeleton className="h-40 w-full" />
                 ) : data.alerts.length === 0 ? (
-                  <EmptyState title="No alerts" description="All accounts are within policy." />
+                  <EmptyState title={t("No alerts")} description={t("All accounts are within policy.")} />
                 ) : (
                   data.alerts.slice(0, 6).map((alert, i) => {
                     const Icon = alertIcon[alert.severity];
@@ -140,8 +142,8 @@ export default function DashboardPage() {
                           <Icon className="h-3.5 w-3.5" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[13px] font-medium leading-tight text-ink">{alert.title}</p>
-                          <p className="mt-0.5 text-[12px] leading-snug text-ink-secondary">{alert.message}</p>
+                          <p className="text-[13px] font-medium leading-tight text-ink">{tServer(alert.title)}</p>
+                          <p className="mt-0.5 text-[12px] leading-snug text-ink-secondary">{tServer(alert.message)}</p>
                         </div>
                       </div>
                     );
@@ -158,16 +160,16 @@ export default function DashboardPage() {
           {isVisible("recommendations") && (
             <Card>
               <CardHeader>
-                <CardTitle>Recommended Transfers</CardTitle>
+                <CardTitle>{t("Recommended Transfers")}</CardTitle>
                 <Link to="/transfers" className="text-xs font-medium text-brand hover:underline">
-                  Go to transfers →
+                  {t("Go to transfers →")}
                 </Link>
               </CardHeader>
               <CardBody className="p-0">
                 {isLoading || !data ? (
                   <Skeleton className="m-5 h-32" />
                 ) : data.recommendations.length === 0 ? (
-                  <EmptyState title="No transfers recommended" description="Every account currently meets its minimum balance." />
+                  <EmptyState title={t("No transfers recommended")} description={t("Every account currently meets its minimum balance.")} />
                 ) : (
                   <div className="divide-y divide-border">
                     {data.recommendations.map((rec, i) => (
@@ -176,7 +178,7 @@ export default function DashboardPage() {
                           <p className="text-[13px] font-medium text-ink">
                             {rec.sourceAccountName} <ArrowLeftRight className="mx-1 inline h-3 w-3 text-ink-muted" /> {rec.destinationAccountName}
                           </p>
-                          <p className="mt-0.5 truncate text-[12px] text-ink-secondary">{rec.reason}</p>
+                          <p className="mt-0.5 truncate text-[12px] text-ink-secondary">{tServer(rec.reason)}</p>
                         </div>
                         <p className="shrink-0 text-[13px] font-semibold tabular-nums text-ink">{formatMoney(rec.amount, rec.currencyCode)}</p>
                       </div>
@@ -190,24 +192,24 @@ export default function DashboardPage() {
           {isVisible("pendingApprovals") && (
             <Card>
               <CardHeader>
-                <CardTitle>Pending Approvals</CardTitle>
+                <CardTitle>{t("Pending Approvals")}</CardTitle>
                 <Link to="/approvals" className="text-xs font-medium text-brand hover:underline">
-                  Approval Center →
+                  {t("Approval Center →")}
                 </Link>
               </CardHeader>
               <CardBody className="p-0">
                 {isLoading || !data ? (
                   <Skeleton className="m-5 h-32" />
                 ) : data.pendingApprovals.length === 0 ? (
-                  <EmptyState title="Nothing pending" description="You're all caught up." />
+                  <EmptyState title={t("Nothing pending")} description={t("You're all caught up.")} />
                 ) : (
                   <div className="divide-y divide-border">
                     {data.pendingApprovals.map((req) => (
                       <div key={req.id} className="flex items-center justify-between gap-3 px-5 py-3">
                         <div className="min-w-0">
-                          <p className="truncate text-[13px] font-medium text-ink">{req.label}</p>
+                          <p className="truncate text-[13px] font-medium text-ink">{tServer(req.label)}</p>
                           <p className="mt-0.5 text-[12px] text-ink-secondary">
-                            {formatDate(req.createdAt)} · Level {req.currentLevel}/{req.requiredLevels}
+                            {formatDate(req.createdAt)} {t("· Level")} {req.currentLevel}/{req.requiredLevels}
                           </p>
                         </div>
                         <div className="flex shrink-0 items-center gap-2">

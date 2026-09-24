@@ -5,6 +5,7 @@ import { Button } from "../ui/Button";
 import { Dialog } from "../ui/Dialog";
 import { useHasModule } from "../../hooks/useSubscription";
 import { DASHBOARD_WIDGETS, useDashboardWidgetPrefs } from "../../hooks/useDashboardWidgetPrefs";
+import { t } from "../../i18n";
 
 // Pro+ only - renders nothing at all for other plans (not even a locked
 // button) since this is a personalisation nicety, not a feature worth an
@@ -27,10 +28,10 @@ export function CustomizeDashboardButton() {
     setSaving(true);
     try {
       await save({ ...prefs, ...draft });
-      toast.success("Dashboard layout saved");
+      toast.success(t("Dashboard layout saved"));
       setOpen(false);
     } catch {
-      toast.error("Could not save layout");
+      toast.error(t("Could not save layout"));
     } finally {
       setSaving(false);
     }
@@ -39,20 +40,20 @@ export function CustomizeDashboardButton() {
   return (
     <>
       <Button variant="outline" size="sm" onClick={openDialog}>
-        <Settings2 className="h-3.5 w-3.5" /> Customize
+        <Settings2 className="h-3.5 w-3.5" /> {t("Customize")}
       </Button>
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
-        title="Customize Dashboard"
-        description="Choose which sections show on your Dashboard - saved to your account, just for you."
+        title={t("Customize Dashboard")}
+        description={t("Choose which sections show on your Dashboard - saved to your account, just for you.")}
         footer={
           <>
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button onClick={onSave} loading={saving}>
-              Save
+              {t("Save")}
             </Button>
           </>
         }
@@ -60,7 +61,7 @@ export function CustomizeDashboardButton() {
         <div className="space-y-1">
           {DASHBOARD_WIDGETS.map((w) => (
             <label key={w.key} className="flex items-center justify-between rounded-lg px-2 py-2 text-[13.5px] text-ink hover:bg-plane">
-              {w.label}
+              {t(w.label)}
               <input
                 type="checkbox"
                 checked={draft[w.key] ?? true}

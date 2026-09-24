@@ -1,13 +1,14 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../lib/api-client";
+import { tk } from "../i18n";
 
 export const DASHBOARD_WIDGETS = [
-  { key: "cashFlowTrend", label: "Cash-Flow Trend" },
-  { key: "cashByBank", label: "Cash by Bank" },
-  { key: "forecast", label: "30-Day Forecast" },
-  { key: "alerts", label: "Alerts" },
-  { key: "recommendations", label: "Recommended Transfers" },
-  { key: "pendingApprovals", label: "Pending Approvals" },
+  { key: "cashFlowTrend", label: tk("Cash-Flow Trend") },
+  { key: "cashByBank", label: tk("Cash by Bank") },
+  { key: "forecast", label: tk("30-Day Forecast") },
+  { key: "alerts", label: tk("Alerts") },
+  { key: "recommendations", label: tk("Recommended Transfers") },
+  { key: "pendingApprovals", label: tk("Pending Approvals") },
 ] as const;
 
 export type DashboardWidgetKey = (typeof DASHBOARD_WIDGETS)[number]["key"];

@@ -18,6 +18,7 @@ import { PERMISSIONS } from "../lib/permissions";
 import { api } from "../lib/api-client";
 import { formatDate, formatMoney } from "../lib/format";
 import type { BankerAcceptance, BankerAcceptanceSummary } from "../lib/types";
+import { t } from "../i18n";
 
 export default function BankerAcceptancesPage() {
   const { hasPermission } = useAuth();
@@ -42,7 +43,7 @@ export default function BankerAcceptancesPage() {
   const columns: Column<BankerAcceptance>[] = [
     {
       key: "referenceNo",
-      header: "BA Reference",
+      header: t("BA Reference"),
       render: (r) => (
         <div>
           <p className="font-medium text-ink">{r.referenceNo}</p>
@@ -50,46 +51,46 @@ export default function BankerAcceptancesPage() {
         </div>
       ),
     },
-    { key: "faceAmount", header: "Face Amount", sortable: true, align: "right", render: (r) => <span className="tabular-nums font-medium">{formatMoney(r.faceAmount, r.currencyCode)}</span> },
-    { key: "proceedsAmount", header: "Credited (Proceeds)", align: "right", render: (r) => <span className="tabular-nums">{formatMoney(r.proceedsAmount, r.currencyCode)}</span> },
+    { key: "faceAmount", header: t("Face Amount"), sortable: true, align: "right", render: (r) => <span className="tabular-nums font-medium">{formatMoney(r.faceAmount, r.currencyCode)}</span> },
+    { key: "proceedsAmount", header: t("Credited (Proceeds)"), align: "right", render: (r) => <span className="tabular-nums">{formatMoney(r.proceedsAmount, r.currencyCode)}</span> },
     {
       key: "cost",
-      header: "Cost",
+      header: t("Cost"),
       align: "right",
       render: (r) => (
         <div className="tabular-nums">
           <p>{formatMoney(r.discountAmount, r.currencyCode)}</p>
-          <p className="text-xs text-ink-muted">{r.effectiveRatePa.toFixed(2)}% p.a.</p>
+          <p className="text-xs text-ink-muted">{t("{rate}% p.a.", { rate: r.effectiveRatePa.toFixed(2) })}</p>
         </div>
       ),
     },
-    { key: "drawdownDate", header: "Drawdown", sortable: true, render: (r) => formatDate(r.drawdownDate) },
+    { key: "drawdownDate", header: t("Drawdown"), sortable: true, render: (r) => formatDate(r.drawdownDate) },
     {
       key: "maturityDate",
-      header: "Maturity",
+      header: t("Maturity"),
       sortable: true,
       render: (r) => (
         <div>
           <p>{formatDate(r.maturityDate)}</p>
-          <p className="text-xs text-ink-muted">{r.tenorDays}-day tenor</p>
+          <p className="text-xs text-ink-muted">{t("{n}-day tenor", { n: r.tenorDays })}</p>
         </div>
       ),
     },
     {
       key: "status",
-      header: "Status",
+      header: t("Status"),
       render: (r) =>
         r.status === "SETTLED" ? (
           <div>
-            <Badge tone="good">Settled</Badge>
+            <Badge tone="good">{t("Settled")}</Badge>
             {r.settledDate && <p className="mt-0.5 text-xs text-ink-muted">{formatDate(r.settledDate)}</p>}
           </div>
         ) : r.isOverdue ? (
-          <Badge tone="critical">{-(r.daysToMaturity ?? 0)}d overdue</Badge>
+          <Badge tone="critical">{t("{n}d overdue", { n: -(r.daysToMaturity ?? 0) })}</Badge>
         ) : (r.daysToMaturity ?? 99) <= 7 ? (
-          <Badge tone="warning">{r.daysToMaturity === 0 ? "Due today" : `Due in ${r.daysToMaturity}d`}</Badge>
+          <Badge tone="warning">{r.daysToMaturity === 0 ? t("Due today") : t("Due in {n}d", { n: r.daysToMaturity ?? 0 })}</Badge>
         ) : (
-          <Badge tone="neutral">Outstanding</Badge>
+          <Badge tone="neutral">{t("Outstanding")}</Badge>
         ),
     },
     ...(canManage
@@ -101,7 +102,7 @@ export default function BankerAcceptancesPage() {
             render: (r: BankerAcceptance) =>
               r.status === "OUTSTANDING" ? (
                 <Button size="sm" variant="outline" onClick={() => setSettling(r)}>
-                  Settle
+                  {t("Settle")}
                 </Button>
               ) : null,
           },
@@ -112,12 +113,12 @@ export default function BankerAcceptancesPage() {
   return (
     <>
       <PageHeader
-        title="Banker Acceptances"
-        description="Drawdowns credited to your accounts and their settlement at maturity, with the cost of each."
+        title={t("Banker Acceptances")}
+        description={t("Drawdowns credited to your accounts and their settlement at maturity, with the cost of each.")}
         actions={
           canManage && (
             <Button onClick={() => setDrawOpen(true)}>
-              <Plus className="h-4 w-4" /> Draw Down BA
+              <Plus className="h-4 w-4" /> {t("Draw Down BA")}
             </Button>
           )
         }
@@ -128,15 +129,15 @@ export default function BankerAcceptancesPage() {
           {summary.map((s) => (
             <StatCard
               key={s.currencyCode}
-              label={`Outstanding (${s.currencyCode})`}
+              label={t("Outstanding ({currency})", { currency: s.currencyCode })}
               value={s.outstanding}
               format={(n) => formatMoney(n, s.currencyCode)}
               tone={s.overdue > 0 ? "critical" : "default"}
               footer={
                 <span className="text-xs text-ink-muted">
-                  {s.count} BA{s.count > 1 ? "s" : ""}
-                  {s.dueIn7Days > 0 ? ` · ${formatMoney(s.dueIn7Days, s.currencyCode)} due within 7 days` : ""}
-                  {s.overdue > 0 ? ` · ${formatMoney(s.overdue, s.currencyCode)} overdue` : ""}
+                  {t("{n} BA(s)", { n: s.count })}
+                  {s.dueIn7Days > 0 ? t(" · {amount} due within 7 days", { amount: formatMoney(s.dueIn7Days, s.currencyCode) }) : ""}
+                  {s.overdue > 0 ? t(" · {amount} overdue", { amount: formatMoney(s.overdue, s.currencyCode) }) : ""}
                 </span>
               }
             />
@@ -148,12 +149,12 @@ export default function BankerAcceptancesPage() {
         <Toolbar
           search={list.search}
           onSearch={list.setSearch}
-          placeholder="Search BA reference or notes..."
+          placeholder={t("Search BA reference or notes...")}
           filters={
             <Select className="h-9 w-40" value={list.filters.status ?? ""} onChange={(e) => list.setFilter("status", e.target.value)}>
-              <option value="">All statuses</option>
-              <option value="OUTSTANDING">Outstanding</option>
-              <option value="SETTLED">Settled</option>
+              <option value="">{t("All statuses")}</option>
+              <option value="OUTSTANDING">{t("Outstanding")}</option>
+              <option value="SETTLED">{t("Settled")}</option>
             </Select>
           }
         />
@@ -162,7 +163,7 @@ export default function BankerAcceptancesPage() {
         ) : list.isError ? (
           <ErrorState message={(list.error as Error)?.message} onRetry={list.refetch} />
         ) : list.data.length === 0 ? (
-          <EmptyState icon={<Scroll className="h-5 w-5" />} title="No banker acceptances yet" description={canManage ? "Record a drawdown when the bank credits the proceeds." : undefined} />
+          <EmptyState icon={<Scroll className="h-5 w-5" />} title={t("No banker acceptances yet")} description={canManage ? t("Record a drawdown when the bank credits the proceeds.") : undefined} />
         ) : (
           <DataTable columns={columns} rows={list.data} rowKey={(r) => r.id} sortBy={list.sortBy} sortDir={list.sortDir} onSort={list.toggleSort} />
         )}

@@ -1,3 +1,4 @@
+import { tk } from "../i18n";
 // Shared API response/domain types mirrored from the backend's response
 // envelope and Prisma models. Kept hand-written and deliberately loose
 // (camelCase, numbers instead of Decimal) since the API already normalises
@@ -205,7 +206,7 @@ export interface CashPositionSummary {
 }
 
 export type PaymentMethod = "TRANSFER" | "CHEQUE" | "BANK_DRAFT";
-export const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = { TRANSFER: "Bank transfer", CHEQUE: "Cheque", BANK_DRAFT: "Bank draft" };
+export const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = { TRANSFER: tk("Bank transfer"), CHEQUE: tk("Cheque"), BANK_DRAFT: tk("Bank draft") };
 
 export type PaymentStatus = "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "REJECTED" | "PROCESSED" | "CANCELLED";
 export type TransferStatus = "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "REJECTED" | "COMPLETED" | "CANCELLED";
@@ -692,4 +693,28 @@ export interface SecurityPolicy {
   mfaRequired: boolean;
   totalUsers: number;
   usersWithMfa: number;
+}
+
+export type AnnouncementType = "INFO" | "MAINTENANCE" | "DOWNTIME";
+
+// A platform-wide notice (maintenance, downtime, news) - see the banner in
+// components/AnnouncementBanner.tsx. Malay text is optional; English is the fallback.
+export interface Announcement {
+  id: string;
+  type: AnnouncementType;
+  titleEn: string;
+  titleMs: string | null;
+  messageEn: string;
+  messageMs: string | null;
+  startsAt: string;
+  endsAt: string;
+  affectedFrom: string | null;
+  affectedTo: string | null;
+  /** True = the user cannot dismiss it (shown until it ends). */
+  persistent: boolean;
+  /** Set for maintenance / downtime that locks the whole system while it is live. */
+  blocking: boolean;
+  /** True while the system is locked by this announcement right now (decided by the server). */
+  locked: boolean;
+  lockedUntil: string | null;
 }

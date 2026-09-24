@@ -7,6 +7,7 @@ import { Button } from "../../components/ui/Button";
 import { Input, Label } from "../../components/ui/Input";
 import { Skeleton } from "../../components/ui/Skeleton";
 import { formatDateTime } from "../../lib/format";
+import { t } from "../../i18n";
 
 export function SettingsTab() {
   const qc = useQueryClient();
@@ -17,7 +18,7 @@ export function SettingsTab() {
   return (
     <div className="space-y-3">
       <p className="mb-2 text-[13px] text-ink-secondary">
-        These tunables control the treasury cash engine and approval workflow behaviour without requiring a code change.
+        {t("These tunables control the treasury cash engine and approval workflow behaviour without requiring a code change.")}
       </p>
       {settings?.map((setting) => (
         <SettingRow key={setting.key} setting={setting} onSaved={() => qc.invalidateQueries({ queryKey: ["system-settings"] })} />
@@ -32,10 +33,10 @@ function SettingRow({ setting, onSaved }: { setting: SystemSetting; onSaved: () 
   const onSubmit = handleSubmit(async (values) => {
     try {
       await api.put(`/system-settings/${setting.key}`, { value: values.value, description: setting.description ?? undefined });
-      toast.success("Setting updated");
+      toast.success(t("Setting updated"));
       onSaved();
     } catch (err) {
-      toast.error("Could not update setting", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Could not update setting"), { description: err instanceof ApiError ? err.message : undefined });
     }
   });
 
@@ -44,15 +45,15 @@ function SettingRow({ setting, onSaved }: { setting: SystemSetting; onSaved: () 
       <div>
         <p className="font-mono text-[12px] text-ink-muted">{setting.key}</p>
         <p className="text-[13px] text-ink-secondary">{setting.description}</p>
-        <p className="mt-1 text-[11px] text-ink-muted">Last updated {formatDateTime(setting.updatedAt)}</p>
+        <p className="mt-1 text-[11px] text-ink-muted">{t("Last updated")} {formatDateTime(setting.updatedAt)}</p>
       </div>
       <div className="flex items-end gap-2">
         <div>
-          <Label htmlFor={setting.key}>Value</Label>
+          <Label htmlFor={setting.key}>{t("Value")}</Label>
           <Input id={setting.key} {...register("value")} className="w-40" />
         </div>
         <Button type="submit" size="sm" variant="outline" loading={isSubmitting} disabled={!isDirty}>
-          Save
+          {t("Save")}
         </Button>
       </div>
     </form>

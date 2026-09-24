@@ -11,6 +11,7 @@ import { Badge } from "../../components/ui/Badge";
 import { Dialog } from "../../components/ui/Dialog";
 import { Input, Label, Textarea } from "../../components/ui/Input";
 import { Skeleton } from "../../components/ui/Skeleton";
+import { t } from "../../i18n";
 
 export function RolesTab() {
   const qc = useQueryClient();
@@ -29,7 +30,7 @@ export function RolesTab() {
     <div>
       <div className="mb-4 flex justify-end">
         <Button onClick={() => setEditing("new")}>
-          <Plus className="h-4 w-4" /> Add Role
+          <Plus className="h-4 w-4" /> {t("Add Role")}
         </Button>
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -42,11 +43,11 @@ export function RolesTab() {
                     {role.name}
                     {role.isSystem && <Lock className="h-3 w-3 text-ink-muted" />}
                   </p>
-                  <p className="mt-0.5 text-xs text-ink-muted">{role.userCount} user(s)</p>
+                  <p className="mt-0.5 text-xs text-ink-muted">{role.userCount} {t("user(s)")}</p>
                 </div>
                 {!role.isSystem && (
                   <Button size="sm" variant="ghost" onClick={() => setEditing(role)}>
-                    Edit
+                    {t("Edit")}
                   </Button>
                 )}
               </div>
@@ -57,7 +58,7 @@ export function RolesTab() {
                     {p}
                   </Badge>
                 ))}
-                {role.permissions.length > 8 && <Badge tone="neutral">+{role.permissions.length - 8} more</Badge>}
+                {role.permissions.length > 8 && <Badge tone="neutral">+{role.permissions.length - 8} {t("more")}</Badge>}
               </div>
             </CardBody>
           </Card>
@@ -99,10 +100,10 @@ function RoleFormDialog({ role, grouped, onClose, onSaved }: { role: Role | null
     try {
       if (role) await api.patch(`/roles/${role.id}`, values);
       else await api.post("/roles", values);
-      toast.success("Role saved");
+      toast.success(t("Role saved"));
       onSaved();
     } catch (err) {
-      toast.error("Could not save role", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Could not save role"), { description: err instanceof ApiError ? err.message : undefined });
     }
   });
 
@@ -110,15 +111,15 @@ function RoleFormDialog({ role, grouped, onClose, onSaved }: { role: Role | null
     <Dialog
       open
       onClose={onClose}
-      title={role ? `Edit ${role.name}` : "Add Role"}
+      title={role ? t("Edit {name}", { name: role.name }) : t("Add Role")}
       size="lg"
       footer={
         <>
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            {t("Cancel")}
           </Button>
           <Button onClick={onSubmit} loading={isSubmitting}>
-            Save
+            {t("Save")}
           </Button>
         </>
       }
@@ -127,17 +128,17 @@ function RoleFormDialog({ role, grouped, onClose, onSaved }: { role: Role | null
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label htmlFor="name" required>
-              Role Name
+              {t("Role Name")}
             </Label>
             <Input id="name" {...register("name", { required: true })} disabled={!!role} />
           </div>
         </div>
         <div>
-          <Label htmlFor="description">Description</Label>
+          <Label htmlFor="description">{t("Description")}</Label>
           <Textarea id="description" rows={2} {...register("description")} />
         </div>
         <div>
-          <Label required>Permissions</Label>
+          <Label required>{t("Permissions")}</Label>
           <div className="max-h-72 space-y-3 overflow-y-auto rounded-lg border border-border p-3">
             {Object.entries(grouped).map(([module, perms]) => (
               <div key={module}>

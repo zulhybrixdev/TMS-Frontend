@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import clsx from "clsx";
 import { Button } from "./Button";
+import { t } from "../../i18n";
 
 interface DialogProps {
   open: boolean;
@@ -53,7 +54,7 @@ export function Dialog({ open, onClose, title, description, children, footer, si
             </h2>
             {description && <p className="mt-0.5 text-[13px] text-ink-secondary">{description}</p>}
           </div>
-          <button onClick={onClose} aria-label="Close dialog" className="rounded-md p-1 text-ink-muted hover:bg-plane hover:text-ink">
+          <button onClick={onClose} aria-label={t("Close dialog")} className="rounded-md p-1 text-ink-muted hover:bg-plane hover:text-ink">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -88,10 +89,10 @@ export function ConfirmDialog({ open, onClose, onConfirm, title, description, co
       footer={
         <>
           <Button variant="outline" onClick={onClose} disabled={loading}>
-            {cancelLabel}
+            {t(cancelLabel)}
           </Button>
           <Button variant={tone === "danger" ? "danger" : "primary"} onClick={onConfirm} loading={loading}>
-            {confirmLabel}
+            {t(confirmLabel)}
           </Button>
         </>
       }

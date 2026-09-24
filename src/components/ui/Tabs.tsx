@@ -1,3 +1,4 @@
+import { t } from "../../i18n";
 import clsx from "clsx";
 
 interface TabsProps {
@@ -18,7 +19,7 @@ export function Tabs({ tabs, active, onChange }: TabsProps) {
             active === tab.key ? "text-brand" : "text-ink-secondary hover:text-ink"
           )}
         >
-          {tab.label}
+          {t(tab.label)}
           {tab.count !== undefined && (
             <span className={clsx("rounded-full px-1.5 py-0.5 text-[11px] font-semibold", active === tab.key ? "bg-brand-soft text-brand" : "bg-plane text-ink-muted")}>{tab.count}</span>
           )}

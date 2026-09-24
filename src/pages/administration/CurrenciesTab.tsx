@@ -11,6 +11,7 @@ import { Button } from "../../components/ui/Button";
 import { Dialog } from "../../components/ui/Dialog";
 import { Input, Label } from "../../components/ui/Input";
 import { Skeleton } from "../../components/ui/Skeleton";
+import { t } from "../../i18n";
 
 export function CurrenciesTab() {
   const qc = useQueryClient();
@@ -19,21 +20,21 @@ export function CurrenciesTab() {
   const { register, handleSubmit, reset, formState: { isSubmitting } } = useForm({ defaultValues: { code: "", name: "", symbol: "" } });
 
   const columns: Column<Currency>[] = [
-    { key: "code", header: "Code", render: (c) => <span className="font-medium text-ink">{c.code}</span> },
-    { key: "name", header: "Name", render: (c) => c.name },
-    { key: "symbol", header: "Symbol", render: (c) => c.symbol },
-    { key: "flags", header: "", render: (c) => (c.isBase ? <Badge tone="brand">Base currency</Badge> : null) },
+    { key: "code", header: t("Code"), render: (c) => <span className="font-medium text-ink">{c.code}</span> },
+    { key: "name", header: t("Name"), render: (c) => c.name },
+    { key: "symbol", header: t("Symbol"), render: (c) => c.symbol },
+    { key: "flags", header: "", render: (c) => (c.isBase ? <Badge tone="brand">{t("Base currency")}</Badge> : null) },
   ];
 
   const onSubmit = handleSubmit(async (values) => {
     try {
       await api.post("/currencies", { ...values, code: values.code.toUpperCase() });
-      toast.success("Currency added");
+      toast.success(t("Currency added"));
       reset();
       setOpen(false);
       qc.invalidateQueries({ queryKey: ["currencies"] });
     } catch (err) {
-      toast.error("Could not add currency", { description: err instanceof ApiError ? err.message : undefined });
+      toast.error(t("Could not add currency"), { description: err instanceof ApiError ? err.message : undefined });
     }
   });
 
@@ -43,7 +44,7 @@ export function CurrenciesTab() {
     <div>
       <div className="mb-4 flex justify-end">
         <Button onClick={() => setOpen(true)}>
-          <Plus className="h-4 w-4" /> Add Currency
+          <Plus className="h-4 w-4" /> {t("Add Currency")}
         </Button>
       </div>
       <DataTable columns={columns} rows={currencies ?? []} rowKey={(c) => c.code} />
@@ -51,14 +52,14 @@ export function CurrenciesTab() {
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
-        title="Add Currency"
+        title={t("Add Currency")}
         footer={
           <>
             <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
             <Button onClick={onSubmit} loading={isSubmitting}>
-              Save
+              {t("Save")}
             </Button>
           </>
         }
@@ -66,19 +67,19 @@ export function CurrenciesTab() {
         <form className="grid grid-cols-3 gap-3" onSubmit={onSubmit}>
           <div>
             <Label htmlFor="code" required>
-              Code
+              {t("Code")}
             </Label>
             <Input id="code" maxLength={3} placeholder="USD" {...register("code", { required: true, minLength: 3, maxLength: 3 })} />
           </div>
           <div>
             <Label htmlFor="name" required>
-              Name
+              {t("Name")}
             </Label>
             <Input id="name" {...register("name", { required: true })} />
           </div>
           <div>
             <Label htmlFor="symbol" required>
-              Symbol
+              {t("Symbol")}
             </Label>
             <Input id="symbol" {...register("symbol", { required: true })} />
           </div>

@@ -4,6 +4,8 @@ import { Landmark, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { api, getToken } from "../lib/api-client";
 import type { SubscriptionMeResponse } from "../lib/types";
+import { t } from "../i18n";
+import { LegalLinks } from "../components/LegalLinks";
 
 // Landing page after a Fiuu (or dummy) checkout redirect. The gateway
 // notification is the actual source of truth for activation (it usually
@@ -25,48 +27,49 @@ export default function BillingReturnPage() {
   const status = invoice?.status ?? "PENDING";
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-plane px-6 py-12">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-plane px-6 py-12">
       <div className="w-full max-w-sm rounded-card border border-border bg-surface-raised p-6 text-center shadow-card">
         <div className="mb-6 flex items-center justify-center gap-2.5">
           <div className="flex h-8 w-8 items-center justify-center rounded-md bg-brand text-white">
             <Landmark className="h-[18px] w-[18px]" />
           </div>
-          <span className="font-display text-[15px] font-semibold text-ink">Treasury System</span>
+          <span className="font-display text-[15px] font-semibold text-ink">{t("Treasury System")}</span>
         </div>
 
         {!isAuthenticated ? (
           <>
-            <p className="text-sm text-ink-secondary">Sign in to see your subscription status.</p>
+            <p className="text-sm text-ink-secondary">{t("Sign in to see your subscription status.")}</p>
             <Link to="/login">
-              <Button className="mt-4 w-full justify-center">Sign in</Button>
+              <Button className="mt-4 w-full justify-center">{t("Sign in")}</Button>
             </Link>
           </>
         ) : isLoading || status === "PENDING" ? (
           <>
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-brand" />
-            <p className="mt-4 text-sm font-medium text-ink">Waiting for payment confirmation...</p>
-            <p className="mt-1 text-[13px] text-ink-secondary">This usually takes a few seconds.</p>
+            <p className="mt-4 text-sm font-medium text-ink">{t("Waiting for payment confirmation...")}</p>
+            <p className="mt-1 text-[13px] text-ink-secondary">{t("This usually takes a few seconds.")}</p>
           </>
         ) : status === "PAID" ? (
           <>
             <CheckCircle2 className="mx-auto h-8 w-8 text-status-good" />
-            <p className="mt-4 text-sm font-medium text-ink">Payment successful</p>
-            <p className="mt-1 text-[13px] text-ink-secondary">You're now on the {data?.subscription.plan.name} plan.</p>
+            <p className="mt-4 text-sm font-medium text-ink">{t("Payment successful")}</p>
+            <p className="mt-1 text-[13px] text-ink-secondary">{t("You're now on the {plan} plan.", { plan: data?.subscription.plan.name })}</p>
             <Link to="/">
-              <Button className="mt-4 w-full justify-center">Go to dashboard</Button>
+              <Button className="mt-4 w-full justify-center">{t("Go to dashboard")}</Button>
             </Link>
           </>
         ) : (
           <>
             <XCircle className="mx-auto h-8 w-8 text-status-critical" />
-            <p className="mt-4 text-sm font-medium text-ink">Payment failed</p>
-            <p className="mt-1 text-[13px] text-ink-secondary">Your plan hasn't changed. You can try again from Settings.</p>
+            <p className="mt-4 text-sm font-medium text-ink">{t("Payment failed")}</p>
+            <p className="mt-1 text-[13px] text-ink-secondary">{t("Your plan hasn't changed. You can try again from Settings.")}</p>
             <Link to="/administration?tab=subscription">
-              <Button className="mt-4 w-full justify-center">Back to subscription settings</Button>
+              <Button className="mt-4 w-full justify-center">{t("Back to subscription settings")}</Button>
             </Link>
           </>
         )}
       </div>
+      <LegalLinks />
     </div>
   );
 }
