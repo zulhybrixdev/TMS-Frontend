@@ -6,6 +6,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Plus, LayoutTemplate, Play } from "lucide-react";
+import { todayLocal } from "../../lib/format";
 import { api, ApiError } from "../../lib/api-client";
 import type { PaymentTemplateRow } from "../../lib/types";
 import { useAllAccounts } from "../../hooks/useReferenceData";
@@ -213,7 +214,7 @@ function TemplateFormDialog({
       description: template?.description ?? "",
       reference: template?.reference ?? "",
       frequency: template?.frequency ?? "NONE",
-      nextRunDate: template?.nextRunDate?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
+      nextRunDate: template?.nextRunDate?.slice(0, 10) ?? todayLocal(),
     },
   });
 

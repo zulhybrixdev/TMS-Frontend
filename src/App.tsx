@@ -14,6 +14,8 @@ import AccountPage from "./pages/AccountPage";
 import ExecutiveDashboardPage from "./pages/ExecutiveDashboardPage";
 import BankAccountsPage from "./pages/BankAccountsPage";
 import CashPositionPage from "./pages/CashPositionPage";
+import TreasuryDeskPage from "./pages/TreasuryDeskPage";
+import BankerAcceptancesPage from "./pages/BankerAcceptancesPage";
 import PaymentsPage from "./pages/PaymentsPage";
 import PaymentDetailPage from "./pages/PaymentDetailPage";
 import BeneficiariesPage from "./pages/BeneficiariesPage";
@@ -113,6 +115,25 @@ export default function App() {
 
           <Route element={<ProtectedRoute permission={[PERMISSIONS.CASH_POSITION_VIEW]} />}>
             <Route path="/cash-position" element={<CashPositionPage />} />
+          </Route>
+
+          <Route element={<ProtectedRoute permission={[PERMISSIONS.CASH_POSITION_VIEW]} />}>
+            <Route
+              path="/treasury-desk"
+              element={
+                <PlanGate module="treasury_desk" feature="Daily Cash Desk">
+                  <TreasuryDeskPage />
+                </PlanGate>
+              }
+            />
+            <Route
+              path="/banker-acceptances"
+              element={
+                <PlanGate module="treasury_desk" feature="Banker Acceptances">
+                  <BankerAcceptancesPage />
+                </PlanGate>
+              }
+            />
           </Route>
 
           <Route element={<ProtectedRoute permission={[PERMISSIONS.PAYMENTS_VIEW, PERMISSIONS.PAYMENTS_CREATE]} />}>

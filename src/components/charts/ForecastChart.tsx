@@ -2,7 +2,7 @@ import { Bar, ComposedChart, CartesianGrid, Line, ResponsiveContainer, Tooltip, 
 import { formatCompact, formatDate, formatMoney } from "../../lib/format";
 import type { ForecastProjectionPoint } from "../../lib/types";
 
-export function ForecastChart({ data, currency = "MYR" }: { data: ForecastProjectionPoint[]; currency?: string }) {
+export function ForecastChart({ data, currency = "MYR", showLiquidity = false }: { data: ForecastProjectionPoint[]; currency?: string; showLiquidity?: boolean }) {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <ComposedChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
@@ -32,7 +32,8 @@ export function ForecastChart({ data, currency = "MYR" }: { data: ForecastProjec
         <Legend wrapperStyle={{ fontSize: 12, color: "var(--ink-secondary)" }} />
         <Bar dataKey="inflow" name="Inflow" fill="var(--series-3)" radius={[3, 3, 0, 0]} maxBarSize={16} />
         <Bar dataKey="outflow" name="Outflow" fill="var(--series-2)" radius={[3, 3, 0, 0]} maxBarSize={16} />
-        <Line type="monotone" dataKey="projectedBalance" name="Projected Balance" stroke="var(--series-1)" strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="projectedBalance" name="Projected Available" stroke="var(--series-1)" strokeWidth={2} dot={false} />
+        {showLiquidity && <Line type="monotone" dataKey="projectedLiquidity" name="Available incl. Overdraft" stroke="var(--series-1)" strokeWidth={1.5} strokeDasharray="5 4" dot={false} />}
       </ComposedChart>
     </ResponsiveContainer>
   );

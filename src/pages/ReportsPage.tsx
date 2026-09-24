@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Download, FileBarChart, FileText, Landmark, Scale, ArrowDownLeft, ArrowLeftRight, ArrowUpRight, TrendingUp } from "lucide-react";
+import { Download, FileBarChart, FileText, Landmark, Scale, ArrowDownLeft, ArrowLeftRight, ArrowUpRight, TrendingUp, Scroll, CalendarDays } from "lucide-react";
 import { PageHeader } from "../components/ui/PageHeader";
 import { Card, CardBody, CardHeader, CardTitle } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
@@ -8,6 +8,7 @@ import { Input, Label } from "../components/ui/Input";
 import { api, ApiError } from "../lib/api-client";
 import { useAuth } from "../lib/auth-context";
 import { PERMISSIONS } from "../lib/permissions";
+import { todayLocal } from "../lib/format";
 import { CustomReportsSection } from "../components/reports/CustomReportsSection";
 
 const REPORTS = [
@@ -16,14 +17,16 @@ const REPORTS = [
   { key: "payments", title: "Payments", description: "Payment requests and their approval/processing status.", icon: ArrowUpRight, dated: true },
   { key: "incoming", title: "Incoming Transactions", description: "Expected and received incoming payments.", icon: ArrowDownLeft, dated: true },
   { key: "transfers", title: "Inter-Bank Transfers", description: "Transfers between company accounts.", icon: ArrowLeftRight, dated: true },
-  { key: "forecast", title: "Cash Forecast", description: "Projected inflows, outflows, and balance.", icon: TrendingUp, dated: true },
+  { key: "daily-movements", title: "Daily Bank Movements & Balances", description: "Every account, every day: opening, collections, BA drawdown/settlement, payments, transfers, closing balance (max 93 days).", icon: CalendarDays, dated: true },
+  { key: "banker-acceptances", title: "Banker Acceptances", description: "BA register: face, proceeds credited, cost, maturity and settlement.", icon: Scroll, dated: false },
+  { key: "forecast", title: "Cash Forecast", description: "Projected inflows, outflows, and available balance.", icon: TrendingUp, dated: true },
 ];
 
 export default function ReportsPage() {
   const { hasPermission } = useAuth();
   const canExport = hasPermission(PERMISSIONS.REPORTS_EXPORT);
-  const [from, setFrom] = useState(new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10));
-  const [to, setTo] = useState(new Date().toISOString().slice(0, 10));
+  const [from, setFrom] = useState(todayLocal(-30));
+  const [to, setTo] = useState(todayLocal());
   const [downloading, setDownloading] = useState<string | null>(null);
 
   const download = async (key: string, dated: boolean, format: "csv" | "xlsx") => {

@@ -7,19 +7,29 @@ import { Button } from "../ui/Button";
 import { Input, Label, Select, Textarea, ErrorText } from "../ui/Input";
 import { useAllAccounts } from "../../hooks/useReferenceData";
 import { api, ApiError } from "../../lib/api-client";
+import { todayLocal } from "../../lib/format";
 import type { Payment } from "../../lib/types";
 
-const schema = z.object({
-  beneficiaryName: z.string().min(2, "Beneficiary name is required"),
-  beneficiaryAccount: z.string().min(4, "Beneficiary account number is required"),
-  beneficiaryBank: z.string().min(2, "Beneficiary bank is required"),
-  amount: z.coerce.number().positive("Amount must be greater than zero"),
-  currencyCode: z.string().length(3),
-  sourceAccountId: z.string().min(1, "Source account is required"),
-  paymentDate: z.string().min(1, "Payment date is required"),
-  description: z.string().optional(),
-  reference: z.string().optional(),
-});
+const schema = z
+  .object({
+    beneficiaryName: z.string().min(2, "Beneficiary name is required"),
+    beneficiaryAccount: z.string().optional(),
+    beneficiaryBank: z.string().optional(),
+    amount: z.coerce.number().positive("Amount must be greater than zero"),
+    currencyCode: z.string().length(3),
+    sourceAccountId: z.string().min(1, "Source account is required"),
+    paymentDate: z.string().min(1, "Due date is required"),
+    paymentMethod: z.enum(["TRANSFER", "CHEQUE", "BANK_DRAFT"]),
+    invoiceNumber: z.string().optional(),
+    description: z.string().optional(),
+    reference: z.string().optional(),
+  })
+  .superRefine((v, ctx) => {
+    // A cheque / bank draft has no account to pay into; a transfer does.
+    if (v.paymentMethod !== "TRANSFER") return;
+    if (!v.beneficiaryAccount || v.beneficiaryAccount.length < 4) ctx.addIssue({ code: "custom", path: ["beneficiaryAccount"], message: "Beneficiary account number is required" });
+    if (!v.beneficiaryBank || v.beneficiaryBank.length < 2) ctx.addIssue({ code: "custom", path: ["beneficiaryBank"], message: "Beneficiary bank is required" });
+  });
 type FormValues = z.infer<typeof schema>;
 
 export function PaymentFormDialog({ open, onClose, onSaved }: { open: boolean; onClose: () => void; onSaved: (p: Payment) => void }) {
@@ -33,16 +43,21 @@ export function PaymentFormDialog({ open, onClose, onSaved }: { open: boolean; o
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { paymentDate: new Date().toISOString().slice(0, 10), currencyCode: "MYR" },
+    defaultValues: { paymentDate: todayLocal(), currencyCode: "MYR", paymentMethod: "TRANSFER" },
   });
 
   const sourceAccountId = watch("sourceAccountId");
+  const paymentMethod = watch("paymentMethod");
   const selectedAccount = accounts?.items.find((a) => a.id === sourceAccountId);
 
   const onSubmit = async (values: FormValues) => {
     try {
-      const payment = await api.post<Payment>("/payments", values);
+      // A cheque / bank draft has no beneficiary account - don't send stale
+      // values from fields that are hidden for this method.
+      const body = values.paymentMethod === "TRANSFER" ? values : { ...values, beneficiaryAccount: undefined, beneficiaryBank: undefined };
+      const payment = await api.post<Payment>("/payments", body);
       toast.success("Payment created as draft", { description: "Submit it for approval when ready." });
+      if (payment.quotaWarning) toast.warning("Released quota", { description: payment.quotaWarning, duration: 9000 });
       reset();
       onSaved(payment);
     } catch (err) {
@@ -55,7 +70,7 @@ export function PaymentFormDialog({ open, onClose, onSaved }: { open: boolean; o
       open={open}
       onClose={onClose}
       title="New Payment"
-      description="Create a draft payment. It won't leave the account until submitted and approved."
+      description="Create a draft payment. The cash leaves the account on the due date, once it has been submitted and approved."
       size="lg"
       footer={
         <>
@@ -96,28 +111,47 @@ export function PaymentFormDialog({ open, onClose, onSaved }: { open: boolean; o
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label htmlFor="beneficiaryName" required>
-              Beneficiary Name
+            <Label htmlFor="paymentMethod" required>
+              Payment Method
             </Label>
-            <Input id="beneficiaryName" {...register("beneficiaryName")} error={!!errors.beneficiaryName} />
-            <ErrorText>{errors.beneficiaryName?.message}</ErrorText>
+            <Select id="paymentMethod" {...register("paymentMethod")}>
+              <option value="TRANSFER">Bank transfer</option>
+              <option value="CHEQUE">Cheque</option>
+              <option value="BANK_DRAFT">Bank draft</option>
+            </Select>
           </div>
           <div>
-            <Label htmlFor="beneficiaryBank" required>
-              Beneficiary Bank
-            </Label>
-            <Input id="beneficiaryBank" {...register("beneficiaryBank")} error={!!errors.beneficiaryBank} placeholder="e.g. Maybank" />
-            <ErrorText>{errors.beneficiaryBank?.message}</ErrorText>
+            <Label htmlFor="invoiceNumber">Invoice No.</Label>
+            <Input id="invoiceNumber" {...register("invoiceNumber")} placeholder="Supplier invoice number" />
           </div>
         </div>
 
         <div>
-          <Label htmlFor="beneficiaryAccount" required>
-            Beneficiary Account Number
+          <Label htmlFor="beneficiaryName" required>
+            {paymentMethod === "TRANSFER" ? "Beneficiary Name" : "Payee Name"}
           </Label>
-          <Input id="beneficiaryAccount" {...register("beneficiaryAccount")} error={!!errors.beneficiaryAccount} />
-          <ErrorText>{errors.beneficiaryAccount?.message}</ErrorText>
+          <Input id="beneficiaryName" {...register("beneficiaryName")} error={!!errors.beneficiaryName} />
+          <ErrorText>{errors.beneficiaryName?.message}</ErrorText>
         </div>
+
+        {paymentMethod === "TRANSFER" && (
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="beneficiaryBank" required>
+                Beneficiary Bank
+              </Label>
+              <Input id="beneficiaryBank" {...register("beneficiaryBank")} error={!!errors.beneficiaryBank} placeholder="e.g. Maybank" />
+              <ErrorText>{errors.beneficiaryBank?.message}</ErrorText>
+            </div>
+            <div>
+              <Label htmlFor="beneficiaryAccount" required>
+                Beneficiary Account Number
+              </Label>
+              <Input id="beneficiaryAccount" {...register("beneficiaryAccount")} error={!!errors.beneficiaryAccount} />
+              <ErrorText>{errors.beneficiaryAccount?.message}</ErrorText>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-3 gap-3">
           <div>
@@ -135,7 +169,7 @@ export function PaymentFormDialog({ open, onClose, onSaved }: { open: boolean; o
           </div>
           <div>
             <Label htmlFor="paymentDate" required>
-              Payment Date
+              Due Date
             </Label>
             <Input id="paymentDate" type="date" {...register("paymentDate")} error={!!errors.paymentDate} />
           </div>

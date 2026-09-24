@@ -2,13 +2,14 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Send, XCircle, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Send, XCircle, AlertTriangle, CalendarClock } from "lucide-react";
 import { api, ApiError } from "../lib/api-client";
-import type { Payment } from "../lib/types";
+import { PAYMENT_METHOD_LABEL, type Payment } from "../lib/types";
 import { Card, CardBody, CardHeader, CardTitle } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { StatusBadge } from "../components/ui/Badge";
 import { ConfirmDialog } from "../components/ui/Dialog";
+import { RescheduleDialog } from "../components/ui/RescheduleDialog";
 import { Skeleton } from "../components/ui/Skeleton";
 import { ErrorState } from "../components/ui/EmptyState";
 import { ApprovalTimeline } from "../components/approvals/ApprovalTimeline";
@@ -24,6 +25,7 @@ export default function PaymentDetailPage() {
   const { hasPermission, user } = useAuth();
   const [confirmSubmit, setConfirmSubmit] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const { data: payment, isLoading, isError, error, refetch } = useQuery({
@@ -32,6 +34,7 @@ export default function PaymentDetailPage() {
   });
 
   const canManage = hasPermission(PERMISSIONS.PAYMENTS_CREATE) && payment?.requestedBy.id === user?.id;
+  const canReschedule = hasPermission(PERMISSIONS.PAYMENTS_CREATE);
 
   const submit = async () => {
     setBusy(true);
@@ -44,6 +47,24 @@ export default function PaymentDetailPage() {
       setConfirmSubmit(false);
     } catch (err) {
       toast.error("Could not submit payment", { description: err instanceof ApiError ? err.message : undefined });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const reschedule = async (paymentDate: string, reason: string) => {
+    setBusy(true);
+    try {
+      const updated = await api.post<Payment>(`/payments/${id}/reschedule`, { paymentDate, reason: reason || undefined });
+      toast.success("Due date updated", { description: updated.status === "PROCESSED" ? "That date has already arrived, so the payment was posted." : undefined });
+      qc.invalidateQueries({ queryKey: ["payment", id] });
+      qc.invalidateQueries({ queryKey: ["payments"] });
+      qc.invalidateQueries({ queryKey: ["forecast-projection"] });
+      qc.invalidateQueries({ queryKey: ["treasury-desk"] });
+      qc.invalidateQueries({ queryKey: ["bank-accounts"] });
+      setRescheduleOpen(false);
+    } catch (err) {
+      toast.error("Could not change the date", { description: err instanceof ApiError ? err.message : undefined });
     } finally {
       setBusy(false);
     }
@@ -85,26 +106,50 @@ export default function PaymentDetailPage() {
             {payment.beneficiaryName} · {formatMoney(payment.amount, payment.currencyCode)}
           </p>
         </div>
-        {canManage && (
-          <div className="flex gap-2">
-            {payment.status === "DRAFT" && (
-              <>
-                <Button variant="outline" onClick={() => setConfirmCancel(true)}>
-                  <XCircle className="h-4 w-4" /> Cancel
-                </Button>
-                <Button onClick={() => setConfirmSubmit(true)}>
-                  <Send className="h-4 w-4" /> Submit for Approval
-                </Button>
-              </>
-            )}
-            {payment.status === "PENDING_APPROVAL" && (
+        <div className="flex gap-2">
+          {/* Any user who can create payments may move a due date, not just whoever raised it - AP is worked by a shared desk. */}
+          {canReschedule && ["DRAFT", "PENDING_APPROVAL", "APPROVED"].includes(payment.status) && (
+            <Button variant="outline" onClick={() => setRescheduleOpen(true)}>
+              <CalendarClock className="h-4 w-4" /> Adjust Due Date
+            </Button>
+          )}
+          {canManage && payment.status === "DRAFT" && (
+            <>
               <Button variant="outline" onClick={() => setConfirmCancel(true)}>
-                <XCircle className="h-4 w-4" /> Cancel Request
+                <XCircle className="h-4 w-4" /> Cancel
               </Button>
-            )}
-          </div>
-        )}
+              <Button onClick={() => setConfirmSubmit(true)}>
+                <Send className="h-4 w-4" /> Submit for Approval
+              </Button>
+            </>
+          )}
+          {canManage && (payment.status === "PENDING_APPROVAL" || payment.status === "APPROVED") && (
+            <Button variant="outline" onClick={() => setConfirmCancel(true)}>
+              <XCircle className="h-4 w-4" /> {payment.status === "APPROVED" ? "Cancel Payment" : "Cancel Request"}
+            </Button>
+          )}
+        </div>
       </div>
+
+      {payment.status === "APPROVED" && (
+        <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-brand/30 bg-brand-soft px-4 py-3 text-[13px] text-brand">
+          <CalendarClock className="mt-0.5 h-4 w-4 shrink-0" />
+          <div>
+            <p className="font-medium">Approved - scheduled for {formatDate(payment.paymentDate)}</p>
+            <p className="mt-0.5 text-ink-secondary">The cash stays in the account until the due date, when it is posted automatically. Until then the due date can still be adjusted, or the payment cancelled.</p>
+          </div>
+        </div>
+      )}
+
+      {payment.quotaWarning && (
+        <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-status-warning/30 bg-status-warning-soft px-4 py-3 text-[13px] text-status-warning">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <div>
+            <p className="font-medium">Released quota</p>
+            <p className="mt-0.5 text-ink-secondary">{payment.quotaWarning}</p>
+          </div>
+        </div>
+      )}
 
       {payment.anomaly?.flagged && (
         <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-status-warning/30 bg-status-warning-soft px-4 py-3 text-[13px] text-status-warning">
@@ -125,12 +170,18 @@ export default function PaymentDetailPage() {
             <CardTitle>Payment Details</CardTitle>
           </CardHeader>
           <CardBody className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <Field label="Beneficiary" value={payment.beneficiaryName} />
-            <Field label="Beneficiary Bank" value={payment.beneficiaryBank} />
-            <Field label="Beneficiary Account" value={payment.beneficiaryAccount} />
+            <Field label={payment.paymentMethod === "TRANSFER" ? "Beneficiary" : "Payee"} value={payment.beneficiaryName} />
+            <Field label="Payment Method" value={PAYMENT_METHOD_LABEL[payment.paymentMethod]} />
+            <Field label="Invoice No." value={payment.invoiceNumber || "—"} />
+            {payment.paymentMethod === "TRANSFER" && (
+              <>
+                <Field label="Beneficiary Bank" value={payment.beneficiaryBank} />
+                <Field label="Beneficiary Account" value={payment.beneficiaryAccount} />
+              </>
+            )}
             <Field label="Amount" value={formatMoney(payment.amount, payment.currencyCode)} />
             <Field label="Source Account" value={`${payment.sourceAccountName} (${payment.sourceBankName})`} />
-            <Field label="Payment Date" value={formatDate(payment.paymentDate)} />
+            <Field label="Due Date" value={formatDate(payment.paymentDate)} />
             <Field label="Reference" value={payment.reference || "—"} />
             <Field label="Requested By" value={payment.requestedBy.name} />
             <Field label="Created" value={formatDateTime(payment.createdAt)} />
@@ -172,9 +223,18 @@ export default function PaymentDetailPage() {
         onClose={() => setConfirmCancel(false)}
         onConfirm={cancel}
         title="Cancel this payment?"
-        description="This action cannot be undone."
+        description={payment.status === "APPROVED" ? "It has been approved but not yet posted, so nothing has left the account. This action cannot be undone." : "This action cannot be undone."}
         confirmLabel="Cancel Payment"
         tone="danger"
+        loading={busy}
+      />
+
+      <RescheduleDialog
+        open={rescheduleOpen}
+        onClose={() => setRescheduleOpen(false)}
+        onConfirm={reschedule}
+        currentDate={payment.paymentDate}
+        subject={`${payment.paymentNumber} · ${payment.beneficiaryName}`}
         loading={busy}
       />
     </>

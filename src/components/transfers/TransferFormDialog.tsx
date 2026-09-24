@@ -8,6 +8,7 @@ import { Button } from "../ui/Button";
 import { Input, Label, Select, Textarea, ErrorText } from "../ui/Input";
 import { useAllAccounts } from "../../hooks/useReferenceData";
 import { api, ApiError } from "../../lib/api-client";
+import { todayLocal } from "../../lib/format";
 import type { Transfer, TransferRecommendation } from "../../lib/types";
 
 const schema = z
@@ -35,7 +36,7 @@ export function TransferFormDialog({ open, onClose, onSaved, prefill }: { open: 
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { transferDate: new Date().toISOString().slice(0, 10), currencyCode: "MYR" },
+    defaultValues: { transferDate: todayLocal(), currencyCode: "MYR" },
   });
 
   useEffect(() => {
@@ -46,12 +47,12 @@ export function TransferFormDialog({ open, onClose, onSaved, prefill }: { open: 
         amount: prefill.amount,
         currencyCode: prefill.currencyCode,
         reason: prefill.reason,
-        transferDate: new Date().toISOString().slice(0, 10),
+        transferDate: todayLocal(),
         suggestedAmount: prefill.amount,
         isSystemRecommended: true,
       });
     } else if (open) {
-      reset({ transferDate: new Date().toISOString().slice(0, 10), currencyCode: "MYR" });
+      reset({ transferDate: todayLocal(), currencyCode: "MYR" });
     }
   }, [open, prefill, reset]);
 
@@ -110,7 +111,12 @@ export function TransferFormDialog({ open, onClose, onSaved, prefill }: { open: 
               ))}
             </Select>
             <ErrorText>{errors.sourceAccountId?.message}</ErrorText>
-            {selectedSource && <p className="mt-1 text-xs text-ink-muted">Available: {selectedSource.availableCash.toLocaleString()} {selectedSource.currencyCode} · Minimum: {selectedSource.minimumBalance.toLocaleString()}</p>}
+            {selectedSource && (
+              <p className="mt-1 text-xs text-ink-muted">
+                Available: {selectedSource.availableCash.toLocaleString()} {selectedSource.currencyCode}
+                {selectedSource.overdraftLimit > 0 ? ` (${selectedSource.liquidity.toLocaleString()} incl. overdraft)` : ""} · Minimum: {selectedSource.minimumBalance.toLocaleString()}
+              </p>
+            )}
           </div>
           <div>
             <Label htmlFor="destinationAccountId" required>
@@ -118,7 +124,8 @@ export function TransferFormDialog({ open, onClose, onSaved, prefill }: { open: 
             </Label>
             <Select id="destinationAccountId" {...register("destinationAccountId")} error={!!errors.destinationAccountId}>
               <option value="">Select account</option>
-              {accounts?.items.map((a) => (
+              {/* One amount, one currency - the destination must hold the same currency as the source. */}
+              {accounts?.items.filter((a) => !selectedSource || a.currencyCode === selectedSource.currencyCode).map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.accountName} ({a.bankName})
                 </option>

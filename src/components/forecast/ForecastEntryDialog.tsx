@@ -7,6 +7,7 @@ import { Button } from "../ui/Button";
 import { Input, Label, Select, Textarea, ErrorText } from "../ui/Input";
 import { useAllAccounts } from "../../hooks/useReferenceData";
 import { api, ApiError } from "../../lib/api-client";
+import { todayLocal } from "../../lib/format";
 import type { ForecastEntry } from "../../lib/types";
 
 const schema = z.object({
@@ -27,7 +28,7 @@ export function ForecastEntryDialog({ open, onClose, onSaved }: { open: boolean;
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { currencyCode: "MYR", category: "OUTFLOW", confidence: "MEDIUM", forecastDate: new Date().toISOString().slice(0, 10) } });
+  } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { currencyCode: "MYR", category: "OUTFLOW", confidence: "MEDIUM", forecastDate: todayLocal() } });
 
   const onSubmit = async (values: FormValues) => {
     try {

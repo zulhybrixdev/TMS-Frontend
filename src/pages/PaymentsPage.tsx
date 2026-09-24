@@ -15,7 +15,7 @@ import { useListQuery } from "../hooks/useListQuery";
 import { useAuth } from "../lib/auth-context";
 import { PERMISSIONS } from "../lib/permissions";
 import { formatDate, formatMoney } from "../lib/format";
-import type { Payment } from "../lib/types";
+import { PAYMENT_METHOD_LABEL, type Payment } from "../lib/types";
 import { PaymentFormDialog } from "../components/payments/PaymentFormDialog";
 
 const STATUSES = ["DRAFT", "PENDING_APPROVAL", "APPROVED", "REJECTED", "PROCESSED", "CANCELLED"];
@@ -37,13 +37,13 @@ export default function PaymentsPage() {
       render: (r) => (
         <div>
           <p className="text-ink">{r.beneficiaryName}</p>
-          <p className="text-xs text-ink-muted">{r.beneficiaryBank}</p>
+          <p className="text-xs text-ink-muted">{r.paymentMethod === "TRANSFER" ? r.beneficiaryBank : PAYMENT_METHOD_LABEL[r.paymentMethod]}{r.invoiceNumber ? ` · ${r.invoiceNumber}` : ""}</p>
         </div>
       ),
     },
     { key: "sourceAccountName", header: "Source Account", render: (r) => <span className="text-ink-secondary">{r.sourceAccountName}</span> },
     { key: "amount", header: "Amount", sortable: true, align: "right", render: (r) => <span className="tabular-nums font-medium">{formatMoney(r.amount, r.currencyCode)}</span> },
-    { key: "paymentDate", header: "Payment Date", sortable: true, render: (r) => formatDate(r.paymentDate) },
+    { key: "paymentDate", header: "Due Date", sortable: true, render: (r) => formatDate(r.paymentDate) },
     { key: "status", header: "Status", render: (r) => <StatusBadge status={r.status} /> },
     { key: "requestedBy", header: "Requested By", render: (r) => <span className="text-xs text-ink-muted">{r.requestedBy?.name}</span> },
   ];
@@ -68,14 +68,22 @@ export default function PaymentsPage() {
           onSearch={list.setSearch}
           placeholder="Search payment #, beneficiary, reference..."
           filters={
-            <Select className="h-9 w-44" value={list.filters.status ?? ""} onChange={(e) => list.setFilter("status", e.target.value)}>
-              <option value="">All statuses</option>
-              {STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {s.replace(/_/g, " ")}
-                </option>
-              ))}
-            </Select>
+            <>
+              <Select className="h-9 w-44" value={list.filters.status ?? ""} onChange={(e) => list.setFilter("status", e.target.value)}>
+                <option value="">All statuses</option>
+                {STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {s.replace(/_/g, " ")}
+                  </option>
+                ))}
+              </Select>
+              <Select className="h-9 w-40" value={list.filters.paymentMethod ?? ""} onChange={(e) => list.setFilter("paymentMethod", e.target.value)}>
+                <option value="">All methods</option>
+                <option value="TRANSFER">Bank transfer</option>
+                <option value="CHEQUE">Cheque</option>
+                <option value="BANK_DRAFT">Bank draft</option>
+              </Select>
+            </>
           }
         />
 

@@ -11,6 +11,9 @@ export default defineConfig({
     // proxied to below), 4417 (uat/poc), 5417 (production) - see
     // backend/src/config/env.ts.
     port: 3417,
+    // Allow being opened by server hostname, not just localhost/IP (Vite blocks
+    // unknown Host headers by default). Only relevant to this dev-tier server.
+    allowedHosts: true,
     proxy: {
       "/api": {
         target: "http://localhost:2417",

@@ -12,7 +12,7 @@ export const PLAN_KEYS: Record<string, PlanKey> = {
 };
 
 const PRO_MODULES: PlanDefinition["modules"] = ["incoming", "transfers", "approval_rules", "forecast", "reports_export", "beneficiaries"];
-const PRO_PLUS_MODULES: PlanDefinition["modules"] = [...PRO_MODULES, "audit", "advanced_insights", "sso"];
+const PRO_PLUS_MODULES: PlanDefinition["modules"] = [...PRO_MODULES, "audit", "advanced_insights", "treasury_desk", "sso"];
 
 export const PLAN_CATALOG: Record<PlanKey, PlanDefinition> = {
   FREE: {

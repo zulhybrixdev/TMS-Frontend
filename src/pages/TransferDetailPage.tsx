@@ -98,14 +98,21 @@ export default function TransferDetailPage() {
                 </Button>
               </>
             )}
-            {transfer.status === "PENDING_APPROVAL" && (
+            {(transfer.status === "PENDING_APPROVAL" || transfer.status === "APPROVED") && (
               <Button variant="outline" onClick={() => setConfirmCancel(true)}>
-                <XCircle className="h-4 w-4" /> Cancel Request
+                <XCircle className="h-4 w-4" /> {transfer.status === "APPROVED" ? "Cancel Transfer" : "Cancel Request"}
               </Button>
             )}
           </div>
         )}
       </div>
+
+      {transfer.status === "APPROVED" && (
+        <div className="mb-4 rounded-lg border border-brand/30 bg-brand-soft px-4 py-3 text-[13px] text-brand">
+          <p className="font-medium">Approved - scheduled for {formatDate(transfer.transferDate)}</p>
+          <p className="mt-0.5 text-ink-secondary">The funds move on the transfer date and are posted automatically. Until then it can still be cancelled.</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <Card className="xl:col-span-2">

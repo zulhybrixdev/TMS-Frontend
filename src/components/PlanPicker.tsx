@@ -18,7 +18,8 @@ const MODULE_FEATURE_LABELS: Record<string, string[]> = {
   reports_export: ["Reports & CSV/Excel export"],
   beneficiaries: ["Saved beneficiary book", "Bulk payment upload", "Payment templates"],
   audit: ["Self-serve audit trail"],
-  advanced_insights: ["Executive dashboard", "Custom report builder", "Consolidated cash position (live FX conversion)", "Saved dashboard layout"],
+  advanced_insights: ["Executive dashboard", "Custom report builder", "Cash totals converted across currencies (live FX)", "Saved dashboard layout"],
+  treasury_desk: ["Daily Cash Desk (per-bank daily movements)", "Banker acceptance drawdown & settlement", "Cheque / bank draft released quotas", "Cash reserve by site"],
   sso: ["Single sign-on with your identity provider (SAML / OIDC)"],
 };
 

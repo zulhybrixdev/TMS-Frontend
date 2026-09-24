@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Dialog } from "../ui/Dialog";
 import { Button } from "../ui/Button";
 import { Input, Label, Select, ErrorText } from "../ui/Input";
-import { useBanks, useCurrencies } from "../../hooks/useReferenceData";
+import { useBanks, useCurrencies, useSites } from "../../hooks/useReferenceData";
 import { api, ApiError } from "../../lib/api-client";
 
 const schema = z.object({
@@ -14,15 +14,19 @@ const schema = z.object({
   accountNumber: z.string().min(4, "Account number is required"),
   currencyCode: z.string().length(3, "Currency is required"),
   accountType: z.enum(["OPERATING", "COLLECTION", "DISBURSEMENT", "RESERVE"]),
-  currentBalance: z.coerce.number().min(0),
+  // Negative = already in overdraft (bounded by the overdraft limit below).
+  currentBalance: z.coerce.number(),
   minimumBalance: z.coerce.number().min(0),
   targetBalance: z.coerce.number().min(0),
-});
+  overdraftLimit: z.coerce.number().min(0),
+  siteName: z.string().max(100).optional(),
+}).refine((v) => v.currentBalance >= -v.overdraftLimit, { message: "More overdrawn than the overdraft limit", path: ["currentBalance"] });
 type FormValues = z.infer<typeof schema>;
 
 export function AccountFormDialog({ open, onClose, onSaved }: { open: boolean; onClose: () => void; onSaved: () => void }) {
   const { data: banks } = useBanks();
   const { data: currencies } = useCurrencies();
+  const { data: sites } = useSites();
   const {
     register,
     handleSubmit,
@@ -30,12 +34,12 @@ export function AccountFormDialog({ open, onClose, onSaved }: { open: boolean; o
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { accountType: "OPERATING", currentBalance: 0, minimumBalance: 0, targetBalance: 0, currencyCode: "MYR" },
+    defaultValues: { accountType: "OPERATING", currentBalance: 0, minimumBalance: 0, targetBalance: 0, overdraftLimit: 0, siteName: "", currencyCode: "MYR" },
   });
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await api.post("/bank-accounts", values);
+      await api.post("/bank-accounts", { ...values, siteName: values.siteName?.trim() || null });
       reset();
       onSaved();
     } catch (err) {
@@ -126,6 +130,7 @@ export function AccountFormDialog({ open, onClose, onSaved }: { open: boolean; o
               Opening Balance
             </Label>
             <Input id="currentBalance" type="number" step="0.01" {...register("currentBalance")} error={!!errors.currentBalance} />
+            <ErrorText>{errors.currentBalance?.message}</ErrorText>
           </div>
           <div>
             <Label htmlFor="minimumBalance" required>
@@ -138,6 +143,24 @@ export function AccountFormDialog({ open, onClose, onSaved }: { open: boolean; o
               Target Balance
             </Label>
             <Input id="targetBalance" type="number" step="0.01" {...register("targetBalance")} error={!!errors.targetBalance} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label htmlFor="overdraftLimit">Overdraft Limit</Label>
+            <Input id="overdraftLimit" type="number" step="0.01" {...register("overdraftLimit")} error={!!errors.overdraftLimit} />
+            <p className="mt-1 text-[11.5px] text-ink-muted">Approved overdraft facility on this account (0 = none).</p>
+          </div>
+          <div>
+            <Label htmlFor="siteName">Site / Entity</Label>
+            <Input id="siteName" list="site-options" {...register("siteName")} placeholder="e.g. PJRM, Bukit Raja" />
+            <datalist id="site-options">
+              {sites?.map((name) => (
+                <option key={name} value={name} />
+              ))}
+            </datalist>
+            <p className="mt-1 text-[11.5px] text-ink-muted">Groups this account's cash reserve by site.</p>
           </div>
         </div>
       </form>

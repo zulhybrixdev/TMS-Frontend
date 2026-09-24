@@ -45,10 +45,43 @@ export default function BankAccountsPage() {
         </div>
       ),
     },
-    { key: "accountType", header: "Type", render: (r) => <span className="text-xs text-ink-secondary">{r.accountType}</span> },
+    { key: "accountType", header: "Type", render: (r) => <span className="text-xs text-ink-secondary">{r.accountType}{r.siteName ? ` · ${r.siteName}` : ""}</span> },
     { key: "currencyCode", header: "Currency", render: (r) => r.currencyCode },
     { key: "currentBalance", header: "Current Balance", sortable: true, align: "right", render: (r) => <span className="tabular-nums">{formatMoney(r.currentBalance, r.currencyCode)}</span> },
-    { key: "availableCash", header: "Available", align: "right", render: (r) => <span className="tabular-nums">{formatMoney(r.availableCash, r.currencyCode)}</span> },
+    { key: "availableCash", header: "Available", align: "right", render: (r) => (
+        <div className="tabular-nums">
+          <p className={r.availableCash < 0 ? "text-status-warning" : ""}>{formatMoney(r.availableCash, r.currencyCode)}</p>
+          {r.overdraftLimit > 0 && <p className="text-xs text-ink-muted">{formatMoney(r.liquidity, r.currencyCode)} incl. OD</p>}
+        </div>
+      ),
+    },
+    {
+      key: "overdraftLimit",
+      header: "Overdraft",
+      align: "right",
+      render: (r) =>
+        r.overdraftLimit > 0 ? (
+          <div className="tabular-nums">
+            <p className={r.overdraftUtilised > 0 ? "text-status-warning" : "text-ink-secondary"}>{formatMoney(r.overdraftUtilised, r.currencyCode)} used</p>
+            <p className="text-xs text-ink-muted">of {formatMoney(r.overdraftLimit, r.currencyCode)}</p>
+          </div>
+        ) : (
+          <span className="text-ink-muted">—</span>
+        ),
+    },
+    {
+      key: "floatTotal",
+      header: "Float D1 / D2",
+      align: "right",
+      render: (r) =>
+        r.floatTotal > 0 ? (
+          <span className="tabular-nums text-ink-secondary">
+            {formatMoney(r.floatDay1, r.currencyCode)} / {formatMoney(r.floatDay2, r.currencyCode)}
+          </span>
+        ) : (
+          <span className="text-ink-muted">—</span>
+        ),
+    },
     { key: "minimumBalance", header: "Minimum", align: "right", render: (r) => <span className="tabular-nums text-ink-secondary">{formatMoney(r.minimumBalance, r.currencyCode)}</span> },
     { key: "targetBalance", header: "Target", align: "right", render: (r) => <span className="tabular-nums text-ink-secondary">{formatMoney(r.targetBalance, r.currencyCode)}</span> },
     { key: "cashStatus", header: "Status", render: (r) => <StatusBadge status={r.cashStatus} /> },
@@ -101,7 +134,7 @@ export default function BankAccountsPage() {
         />
 
         {list.isLoading ? (
-          <SkeletonTable cols={9} />
+          <SkeletonTable cols={11} />
         ) : list.isError ? (
           <ErrorState message={(list.error as Error)?.message} onRetry={list.refetch} />
         ) : list.data.length === 0 ? (

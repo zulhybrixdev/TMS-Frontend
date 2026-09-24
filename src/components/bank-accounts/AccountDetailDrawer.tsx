@@ -6,12 +6,13 @@ import { toast } from "sonner";
 import { Dialog } from "../ui/Dialog";
 import { Button } from "../ui/Button";
 import { Input, Label, Select } from "../ui/Input";
+import { useSites } from "../../hooks/useReferenceData";
 import { Tabs } from "../ui/Tabs";
 import { StatusBadge } from "../ui/Badge";
 import { Skeleton } from "../ui/Skeleton";
 import { ChartTooltip } from "../charts/ChartTooltip";
 import { api, ApiError } from "../../lib/api-client";
-import { formatDate, formatMoney } from "../../lib/format";
+import { formatDate, formatMoney, todayLocal } from "../../lib/format";
 import { useAuth } from "../../lib/auth-context";
 import { PERMISSIONS } from "../../lib/permissions";
 import type { BankAccountRow } from "../../lib/types";
@@ -26,6 +27,7 @@ export function AccountDetailDrawer({ account, onClose, onUpdated }: Props) {
   const { hasPermission } = useAuth();
   const canManage = hasPermission(PERMISSIONS.ACCOUNTS_MANAGE);
   const [tab, setTab] = useState("overview");
+  const { data: sites } = useSites();
 
   const { data: history, isLoading: historyLoading } = useQuery({
     queryKey: ["account-balances", account.id],
@@ -37,11 +39,13 @@ export function AccountDetailDrawer({ account, onClose, onUpdated }: Props) {
       minimumBalance: account.minimumBalance,
       targetBalance: account.targetBalance,
       reservedAmount: account.reservedAmount,
+      overdraftLimit: account.overdraftLimit,
+      siteName: account.siteName ?? "",
       status: account.status,
     },
   });
 
-  const balanceForm = useForm({ defaultValues: { balanceDate: new Date().toISOString().slice(0, 10), closingBalance: account.currentBalance } });
+  const balanceForm = useForm({ defaultValues: { balanceDate: todayLocal(), closingBalance: account.currentBalance } });
 
   const saveSettings = settingsForm.handleSubmit(async (values) => {
     try {
@@ -49,6 +53,8 @@ export function AccountDetailDrawer({ account, onClose, onUpdated }: Props) {
         minimumBalance: Number(values.minimumBalance),
         targetBalance: Number(values.targetBalance),
         reservedAmount: Number(values.reservedAmount),
+        overdraftLimit: Number(values.overdraftLimit),
+        siteName: values.siteName?.trim() || null,
         status: values.status,
       });
       toast.success("Account settings updated");
@@ -64,7 +70,9 @@ export function AccountDetailDrawer({ account, onClose, onUpdated }: Props) {
         balanceDate: values.balanceDate,
         closingBalance: Number(values.closingBalance),
       });
-      toast.success("Balance recorded", { description: "Current balance and cash position have been updated." });
+      toast.success("Balance recorded", {
+        description: values.balanceDate === todayLocal() ? "Current balance and cash position have been updated." : "Recorded in that day's history - the current balance is unchanged.",
+      });
       onUpdated(updated);
     } catch (err) {
       toast.error("Could not record balance", { description: err instanceof ApiError ? err.message : undefined });
@@ -90,6 +98,25 @@ export function AccountDetailDrawer({ account, onClose, onUpdated }: Props) {
             <Metric label="Minimum" value={formatMoney(account.minimumBalance, account.currencyCode)} />
             <Metric label="Target" value={formatMoney(account.targetBalance, account.currencyCode)} />
           </div>
+          {(account.overdraftLimit > 0 || account.floatTotal > 0 || account.siteName) && (
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {account.overdraftLimit > 0 && (
+                <>
+                  <Metric label="Overdraft Limit" value={formatMoney(account.overdraftLimit, account.currencyCode)} />
+                  <Metric label="Overdraft Used" value={formatMoney(account.overdraftUtilised, account.currencyCode)} tone={account.overdraftUtilised > 0 ? "warning" : undefined} />
+                  <Metric label="Overdraft Left" value={formatMoney(account.overdraftAvailable, account.currencyCode)} />
+                  <Metric label="Available incl. OD" value={formatMoney(account.liquidity, account.currencyCode)} />
+                </>
+              )}
+              {account.floatTotal > 0 && (
+                <>
+                  <Metric label="Day 1 Float" value={formatMoney(account.floatDay1, account.currencyCode)} />
+                  <Metric label="Day 2 Float" value={formatMoney(account.floatDay2, account.currencyCode)} />
+                </>
+              )}
+              {account.siteName && <Metric label="Site" value={account.siteName} />}
+            </div>
+          )}
           <div className="mt-3 flex items-center gap-2">
             <StatusBadge status={account.cashStatus} />
             <StatusBadge status={account.status} />
@@ -139,6 +166,19 @@ export function AccountDetailDrawer({ account, onClose, onUpdated }: Props) {
               <Input id="reservedAmount" type="number" step="0.01" {...settingsForm.register("reservedAmount")} />
             </div>
             <div>
+              <Label htmlFor="overdraftLimit">Overdraft Limit</Label>
+              <Input id="overdraftLimit" type="number" step="0.01" {...settingsForm.register("overdraftLimit")} />
+            </div>
+            <div>
+              <Label htmlFor="siteName">Site / Entity</Label>
+              <Input id="siteName" list="drawer-site-options" placeholder="e.g. PJRM, Bukit Raja" {...settingsForm.register("siteName")} />
+              <datalist id="drawer-site-options">
+                {sites?.map((name) => (
+                  <option key={name} value={name} />
+                ))}
+              </datalist>
+            </div>
+            <div>
               <Label htmlFor="status">Status</Label>
               <Select id="status" {...settingsForm.register("status")}>
                 <option value="ACTIVE">Active</option>
@@ -157,7 +197,9 @@ export function AccountDetailDrawer({ account, onClose, onUpdated }: Props) {
 
       {tab === "balance" && canManage && (
         <form className="space-y-4 pt-4" onSubmit={saveBalance}>
-          <p className="text-[13px] text-ink-secondary">Record today's (or a backdated) closing balance from the bank statement. This updates the cash position immediately.</p>
+          <p className="text-[13px] text-ink-secondary">
+            Record a closing balance from the bank statement. Today's date updates the current balance and cash position immediately; an earlier date only corrects that day's history and leaves the current balance alone. The balance can be negative for an account in overdraft.
+          </p>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="balanceDate">Balance Date</Label>
@@ -179,11 +221,11 @@ export function AccountDetailDrawer({ account, onClose, onUpdated }: Props) {
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({ label, value, tone }: { label: string; value: string; tone?: "warning" }) {
   return (
     <div className="rounded-lg bg-plane p-3">
       <p className="text-[11px] font-medium uppercase tracking-wide text-ink-muted">{label}</p>
-      <p className="mt-1 text-[15px] font-semibold tabular-nums text-ink">{value}</p>
+      <p className={`mt-1 text-[15px] font-semibold tabular-nums ${tone === "warning" ? "text-status-warning" : "text-ink"}`}>{value}</p>
     </div>
   );
 }

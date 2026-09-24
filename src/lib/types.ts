@@ -33,7 +33,7 @@ export interface AuthUser {
 }
 
 export type PlanKey = "FREE" | "PRO" | "PRO_PLUS";
-export type ModuleKey = "incoming" | "transfers" | "approval_rules" | "forecast" | "reports_export" | "beneficiaries" | "audit" | "advanced_insights" | "sso";
+export type ModuleKey = "incoming" | "transfers" | "approval_rules" | "forecast" | "reports_export" | "beneficiaries" | "audit" | "advanced_insights" | "treasury_desk" | "sso";
 export type TenantAccountType = "INDIVIDUAL" | "TEAM" | "ENTERPRISE";
 
 export interface PlanDefinition {
@@ -105,7 +105,17 @@ export interface BankAccountRow {
   reservedAmount: number;
   minimumBalance: number;
   targetBalance: number;
+  overdraftLimit: number;
+  overdraftUtilised: number;
+  overdraftAvailable: number;
+  siteName: string | null;
+  floatDay1: number;
+  floatDay2: number;
+  floatTotal: number;
+  /** Balance - reserved - uncleared float. */
   availableCash: number;
+  /** availableCash + overdraft facility. */
+  liquidity: number;
   shortfall: number;
   excessCash: number;
   cashStatus: CashStatus;
@@ -171,6 +181,14 @@ export interface TransferRecommendation {
 }
 
 export interface CashPositionSummary {
+  baseCurrency: string;
+  /** False on plans without converted totals: only base-currency accounts are in the headline totals. */
+  fxConversion: boolean;
+  unconvertedCurrencies: string[];
+  totalFloat: number;
+  overdraftLimit: number;
+  overdraftUtilised: number;
+  liquidity: number;
   totalCash: number;
   availableCash: number;
   minimumRequired: number;
@@ -185,6 +203,9 @@ export interface CashPositionSummary {
   accounts: BankAccountRow[];
   recommendations: TransferRecommendation[];
 }
+
+export type PaymentMethod = "TRANSFER" | "CHEQUE" | "BANK_DRAFT";
+export const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = { TRANSFER: "Bank transfer", CHEQUE: "Cheque", BANK_DRAFT: "Bank draft" };
 
 export type PaymentStatus = "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "REJECTED" | "PROCESSED" | "CANCELLED";
 export type TransferStatus = "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "REJECTED" | "COMPLETED" | "CANCELLED";
@@ -231,6 +252,8 @@ export interface Payment {
   sourceAccountName?: string;
   sourceBankName?: string;
   paymentDate: string;
+  paymentMethod: PaymentMethod;
+  invoiceNumber?: string | null;
   description?: string | null;
   reference?: string | null;
   attachmentUrl?: string | null;
@@ -242,6 +265,9 @@ export interface Payment {
   // Only present on GET /payments/:id and the POST /submit response - not
   // computed for list views (would be an N+1 query per row).
   anomaly?: { flagged: boolean; reason?: string };
+  // Present on create/update/detail: set when a cheque / bank draft would
+  // take that day's released quota over its limit (advisory, never blocks).
+  quotaWarning?: string | null;
 }
 
 export interface IncomingTransaction {
@@ -254,6 +280,9 @@ export interface IncomingTransaction {
   destinationAccountName?: string;
   destinationBankName?: string;
   valueDate: string;
+  invoiceNumber?: string | null;
+  floatDays: number;
+  clearingDate: string | null;
   description?: string | null;
   status: IncomingStatus;
   createdAt: string;
@@ -302,7 +331,200 @@ export interface ForecastProjectionPoint {
   inflow: number;
   outflow: number;
   netChange: number;
+  /** Projected available balance (booked less reserved and uncleared float). */
   projectedBalance: number;
+  /** projectedBalance plus overdraft facilities. */
+  projectedLiquidity: number;
+  shortfallAccounts: string[];
+  overdraftAccounts: string[];
+  excessAccounts: string[];
+}
+
+export interface AccountProjectionDay {
+  date: string;
+  inflow: number;
+  outflow: number;
+  book: number;
+  available: number;
+  liquidity: number;
+}
+
+export interface AccountProjection {
+  accountId: string;
+  accountName: string;
+  bankId: string | null;
+  bankName: string;
+  currencyCode: string;
+  siteName: string | null;
+  overdraftLimit: number;
+  minimumBalance: number;
+  targetBalance: number;
+  unallocated: boolean;
+  days: AccountProjectionDay[];
+}
+
+export interface OverdueItem {
+  currencyCode: string;
+  amount: number;
+  count: number;
+}
+
+export interface ProjectionDetail {
+  from: string;
+  to: string;
+  baseCurrency: string;
+  currencyFilter: string | null;
+  points: ForecastProjectionPoint[];
+  accounts: AccountProjection[];
+  unconvertedCurrencies: string[];
+  fxConversion: boolean;
+  overdue: { payables: OverdueItem[]; receivables: OverdueItem[] };
+}
+
+export interface BankerAcceptance {
+  id: string;
+  referenceNo: string;
+  currencyCode: string;
+  creditAccountId: string;
+  creditAccountName?: string;
+  creditBankName?: string;
+  settlementAccountId: string;
+  settlementAccountName?: string;
+  settlementBankName?: string;
+  faceAmount: number;
+  proceedsAmount: number;
+  drawdownDate: string;
+  maturityDate: string;
+  tenorDays: number;
+  discountAmount: number;
+  effectiveRatePa: number;
+  status: "OUTSTANDING" | "SETTLED";
+  settledDate: string | null;
+  settledAmount: number | null;
+  daysToMaturity: number | null;
+  isOverdue: boolean;
+  description?: string | null;
+  createdBy?: { id: string; name: string };
+  createdAt: string;
+}
+
+export interface BankerAcceptanceSummary {
+  currencyCode: string;
+  outstanding: number;
+  dueIn7Days: number;
+  overdue: number;
+  count: number;
+}
+
+export interface InstrumentQuota {
+  id: string;
+  paymentMethod: "CHEQUE" | "BANK_DRAFT";
+  bankId: string | null;
+  bankName: string | null;
+  dailyAmountLimit: number | null;
+  dailyCountLimit: number | null;
+  currencyCode: string;
+  isActive: boolean;
+}
+
+export interface QuotaUsage extends InstrumentQuota {
+  date: string;
+  releasedAmount: number;
+  releasedCount: number;
+  pendingAmount: number;
+  pendingCount: number;
+  remainingAmount: number | null;
+  remainingCount: number | null;
+  utilisationPct: number;
+  exceeded: boolean;
+}
+
+export interface DailyAccountRow {
+  accountId: string;
+  accountName: string;
+  accountNumber: string;
+  bankId: string;
+  bankName: string;
+  currencyCode: string;
+  accountType: string;
+  siteName: string | null;
+  opening: number | null;
+  collections: number;
+  baDrawdown: number;
+  baSettlement: number;
+  paymentsOut: number;
+  transfersIn: number;
+  transfersOut: number;
+  otherMovement: number;
+  closing: number | null;
+  overdraftLimit: number;
+  overdraftUtilised: number;
+  // Live-only - null when looking at a past date.
+  reserved: number | null;
+  floatDay1: number | null;
+  floatDay2: number | null;
+  floatTotal: number | null;
+  availableCash: number | null;
+  liquidity: number | null;
+  expectedCollections: number | null;
+  scheduledPayments: number | null;
+  baMaturing: number | null;
+}
+
+export interface DailyCurrencyTotals {
+  currencyCode: string;
+  opening: number;
+  collections: number;
+  baDrawdown: number;
+  baSettlement: number;
+  paymentsOut: number;
+  transfersIn: number;
+  transfersOut: number;
+  otherMovement: number;
+  closing: number;
+  overdraftLimit: number;
+  overdraftUtilised: number;
+  floatDay1: number;
+  floatDay2: number;
+  floatTotal: number;
+  availableCash: number;
+  liquidity: number;
+  expectedCollections: number;
+  scheduledPayments: number;
+  baMaturing: number;
+}
+
+export interface ReserveSite {
+  siteName: string;
+  currencyCode: string;
+  earmarked: number;
+  reserveAccountBalance: number;
+  total: number;
+  accounts: { accountId: string; accountName: string; bankName: string; accountType: string; amount: number }[];
+}
+
+export interface DailyDesk {
+  date: string;
+  isToday: boolean;
+  accounts: DailyAccountRow[];
+  totalsByCurrency: DailyCurrencyTotals[];
+  quotas: QuotaUsage[];
+  reserves: ReserveSite[];
+  bankerAcceptances: {
+    summary: BankerAcceptanceSummary[];
+    upcoming: { id: string; referenceNo: string; currencyCode: string; faceAmount: number; maturityDate: string; daysToMaturity: number; settlementAccountName: string; bankName: string }[];
+  };
+}
+
+export interface BalanceGridCell {
+  balance: number | null;
+  available: number | null;
+}
+
+export interface BalanceGrid {
+  dates: { date: string; kind: "actual" | "today" | "projected" }[];
+  accounts: { accountId: string; accountName: string; bankName: string; currencyCode: string; siteName: string | null; overdraftLimit: number; cells: BalanceGridCell[] }[];
+  totalsByCurrency: { currencyCode: string; cells: BalanceGridCell[] }[];
 }
 
 export interface DashboardAlert {

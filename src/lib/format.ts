@@ -47,3 +47,18 @@ export function initials(name: string): string {
     .map((p) => p[0]?.toUpperCase())
     .join("");
 }
+
+// Today's calendar date in the *browser's* timezone as YYYY-MM-DD. Not
+// `new Date().toISOString().slice(0, 10)`, which is the UTC date and reads as
+// "yesterday" for anyone east of UTC before 8am (Malaysia is UTC+8).
+export function todayLocal(offsetDays = 0): string {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// A DATE column comes back as "2026-09-24T00:00:00.000Z" - the calendar date
+// is the first ten characters, whatever timezone the browser is in.
+export function dateOnly(value: string | Date): string {
+  return (typeof value === "string" ? value : value.toISOString()).slice(0, 10);
+}

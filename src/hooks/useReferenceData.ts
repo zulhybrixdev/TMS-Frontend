@@ -16,3 +16,8 @@ export function useAllAccounts() {
     queryFn: () => api.getPaginated<BankAccountRow>("/bank-accounts?pageSize=100"),
   });
 }
+
+// Site/entity names already used on bank accounts (PJRM, Bukit Raja, ...).
+export function useSites() {
+  return useQuery({ queryKey: ["bank-account-sites"], queryFn: () => api.get<string[]>("/bank-accounts/sites") });
+}

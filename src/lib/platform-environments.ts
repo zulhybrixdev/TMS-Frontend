@@ -13,6 +13,6 @@ export interface PlatformEnvironment {
 }
 
 export const PLATFORM_ENVIRONMENTS: PlatformEnvironment[] = [
-  { key: "uat", label: "UAT / POC", apiBase: "http://localhost:4417/api" },
-  { key: "production", label: "Production", apiBase: "http://localhost:5417/api" },
+  { key: "uat", label: "UAT / POC", apiBase: import.meta.env.VITE_PLATFORM_UAT_API_BASE || "http://localhost:4417/api" },
+  { key: "production", label: "Production", apiBase: import.meta.env.VITE_PLATFORM_PROD_API_BASE || "http://localhost:5417/api" },
 ];
