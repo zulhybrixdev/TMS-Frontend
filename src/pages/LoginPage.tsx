@@ -9,14 +9,6 @@ import { Input, Label } from "../components/ui/Input";
 import { ApiError, getApiBaseUrl } from "../lib/api-client";
 import { MfaSetupDialog, RecoveryCodesDialog, type MfaEnableResult } from "../components/MfaSetup";
 
-const DEMO_ACCOUNTS = [
-  { email: "maker@treasurysystem.com.my", role: "Finance Maker", desc: "Creates payments & transfers" },
-  { email: "checker@treasurysystem.com.my", role: "Finance Checker", desc: "First-level approver" },
-  { email: "manager@treasurysystem.com.my", role: "Finance Manager", desc: "Second-level approver, admin" },
-  { email: "admin@treasurysystem.com.my", role: "Admin", desc: "Full system access" },
-  { email: "viewer@treasurysystem.com.my", role: "Viewer", desc: "Read-only access" },
-];
-
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 10 },
   show: (i: number) => ({ opacity: 1, y: 0, transition: { delay: 0.06 * i, duration: 0.5, ease: [0.16, 1, 0.3, 1] as const } }),
@@ -27,8 +19,8 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const [email, setEmail] = useState("maker@treasurysystem.com.my");
-  const [password, setPassword] = useState("Password123!");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [mfaStep, setMfaStep] = useState(false);
   const [mfaCode, setMfaCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -213,29 +205,6 @@ export default function LoginPage() {
                   </Link>
                 </p>
               )}
-
-              <div className="mt-8 rounded-card border border-dashed border-border p-4">
-                <p className="font-mono text-[11px] font-medium uppercase tracking-wide text-ink-muted">Demo accounts (tenant: TEST) · password Password123!</p>
-                <div className="mt-2.5 space-y-1.5">
-                  {DEMO_ACCOUNTS.map((acc) => (
-                    <button
-                      key={acc.email}
-                      type="button"
-                      onClick={() => {
-                        setEmail(acc.email);
-                        setPassword("Password123!");
-                      }}
-                      className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-[13px] transition-colors hover:bg-plane"
-                    >
-                      <span>
-                        <span className="font-medium text-ink">{acc.role}</span>
-                        <span className="block text-[11px] text-ink-muted">{acc.desc}</span>
-                      </span>
-                      <span className="font-mono text-[11px] text-ink-muted">{acc.email}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
             </>
           ) : ssoStep ? (
             <>
